@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo2 CAST Stack Align S4 to S1 &mdash; CAST Latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=4222aa8f"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Demo3 CAST Project" href="demo3_CAST_project.html" />
+    <link rel="prev" title="Demo1 CAST Mark captures common spatial features across multiple samples" href="demo1_CAST_mark.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CAST
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Tutorials:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="demo1_CAST_mark.html">Demo1 CAST Mark captures common spatial features across multiple samples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Demo2 CAST Stack Align S4 to S1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo3_CAST_project.html">Demo3 CAST Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo4_STARmap_to_MERFISH.html">Demo4 STARmap to MERFISH</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CAST</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Demo2 CAST Stack Align S4 to S1</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/demo2_CAST_Stack_Align_S4_to_S1.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Demo2-CAST-Stack-Align-S4-to-S1">
+<h1>Demo2 CAST Stack Align S4 to S1<a class="headerlink" href="#Demo2-CAST-Stack-Align-S4-to-S1" title="Link to this heading"></a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>import CAST
+import os, torch
+import warnings
+warnings.filterwarnings(&quot;ignore&quot;)
+work_dir = &#39;$demo_path&#39; #### input the demo path
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Using backend: pytorch
+</pre></div></div>
+</div>
+<p>To align the slices with preserving the cell organization, <code class="docutils literal notranslate"><span class="pre">CAST_STACK()</span></code> is used to perform gradient-descent-based rigid registration and free-form deformation (FFD) to get a proper transformation.</p>
+<div class="line-block">
+<div class="line">Here are the parameters used in this function:</div>
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">coords_raw</span></code> - The dictionary of the coordinates matrix with sample name.</div>
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">embed_dict</span></code> - The dictionary of the graph embedding generated by CAST Mark with sample name.</div>
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">output_path</span></code> - The output folder path.</div>
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">graph_list</span></code> - The list of [<code class="docutils literal notranslate"><span class="pre">query</span> <span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">reference</span> <span class="pre">sample</span></code>]. The query sample will be aligned to the reference sample.</div>
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">params_dist</span></code> - The parameter dictionary for the CAST Stack.</div>
+<div class="line">- <code class="docutils literal notranslate"><span class="pre">dataname</span></code> - The dataset name. - <code class="docutils literal notranslate"><span class="pre">gpu</span></code> - The index of the gpu if the GPU device is available.</div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>**Affine parameters**
+
+- `iterations` - Iterations of the affine transformation.
+- `alpha_basis` - The coefficient for updating the affine transformation parameter.
+- `dist_penalty1` - Distance penalty parameter in affine transformation. When the distance of the query cell to the nearest neighbor in reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will add additional distance penalty. The initial cost function value of these cells will be multiplied by the `dist_penalty1`. The value `0` indicates no additional distance penalty.
+- `bleeding` - When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
+- `d_list` - CAST Stack will perform pre-location to find an initial alignment. The value in the `d_list` will be multiplied by the query sample to calculate the cost function. For example, 2 indicates the two-fold increase of the coordinates.
+- `attention_params` - The attention mechanism to increase the penalty of the cells. It is invalid when the `dist_penalty` = 0.
+    - `1st - attention_region` - The True/False index of all the cells of the query sample or None.
+    - `2nd - double_penalty` - The `average cell distance / double_penalty` will be used in distance penalty for the cells with attention.
+    - `3rd - penalty_inc_all` - The additional penalty for the attention cells. The initial cost function value of these cells will be multiplied by `penalty_inc_all`.
+    - `4th - penalty_inc_both` - The additional penalty for the cells with distance penalty and attention. The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.
+
+**FFD parameters**
+
+- `dist_penalty2` - Distance penalty parameter in FFD. Refer to `dist_penalty1`.
+- `alpha_basis_bs` - The coefficient for updating the FFD parameter.
+- `meshsize` - mesh size for the FFD.
+- `iterations_bs` - Iterations of the FFD.
+- `attention_params_bs` - The attention mechanism to increase the penalty of the cells. Refer to `attention_params`.
+- `mesh_weight` - The weight matrix for the mesh grid. The same size of the mesh or None.
+</pre></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>output_path = f&#39;{work_dir}/demo2_CAST_Stack_Align_S4_to_S1/demo_output&#39;
+os.makedirs(output_path,exist_ok = True)
+coords_raw = torch.load(f&#39;{output_path}/../data/demo2_coords_raw.pt&#39;,map_location=&#39;cpu&#39;)
+embed_dict = torch.load(f&#39;{output_path}/../data/demo2_embed_dict.pt&#39;,map_location=&#39;cpu&#39;)
+graph_list = [&#39;S4&#39;,&#39;S1&#39;] # [query_sample, reference_sample]
+query_sample = graph_list[0]
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>params_dist = CAST.reg_params(dataname = query_sample,
+                            gpu = 0 if torch.cuda.is_available() else -1,
+                            diff_step = 5,
+                            #### Affine parameters
+                            iterations=500,
+                            dist_penalty1=0,
+                            bleeding=500,
+                            d_list = [3,2,1,1/2,1/3],
+                            attention_params = [None,3,1,0],
+                            #### FFD parameters
+                            dist_penalty2 = [0],
+                            alpha_basis_bs = [500],
+                            meshsize = [8],
+                            iterations_bs = [400],
+                            attention_params_bs = [[None,3,1,0]],
+                            mesh_weight = [None])
+params_dist.alpha_basis = torch.Tensor([1/1000,1/1000,1/50,5,5]).reshape(5,1).to(params_dist.device)
+coords_final = CAST.CAST_STACK(coords_raw,embed_dict,output_path,graph_list,params_dist)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Loss: 993.963: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 500/500 [00:15&lt;00:00, 33.15it/s]
+Loss: 708.108: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 400/400 [00:32&lt;00:00, 12.15it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 400/400 [00:02&lt;00:00, 152.10it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_1.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_2.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_3.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_4.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_5.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_5.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_6.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_6.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_7.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_7.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_8.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_8.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_9.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_9.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_10.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_10.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_11.png" src="../_images/notebooks_demo2_CAST_Stack_Align_S4_to_S1_4_11.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="demo1_CAST_mark.html" class="btn btn-neutral float-left" title="Demo1 CAST Mark captures common spatial features across multiple samples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="demo3_CAST_project.html" class="btn btn-neutral float-right" title="Demo3 CAST Project" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Zefang Tang; Shuchen Luo; Xiao Wang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

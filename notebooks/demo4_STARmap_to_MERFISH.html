@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo4 STARmap to MERFISH &mdash; CAST Latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=4222aa8f"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Demo3 CAST Project" href="demo3_CAST_project.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CAST
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Tutorials:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="demo1_CAST_mark.html">Demo1 CAST Mark captures common spatial features across multiple samples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo2_CAST_Stack_Align_S4_to_S1.html">Demo2 CAST Stack Align S4 to S1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo3_CAST_project.html">Demo3 CAST Project</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Demo4 STARmap to MERFISH</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CAST</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Demo4 STARmap to MERFISH</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/demo4_STARmap_to_MERFISH.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Demo4-STARmap-to-MERFISH">
+<h1>Demo4 STARmap to MERFISH<a class="headerlink" href="#Demo4-STARmap-to-MERFISH" title="Link to this heading"></a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>import scanpy as sc
+import torch,random,os,sys
+from tqdm import tqdm
+import numpy as np
+import CAST
+import matplotlib.pyplot as plt
+from sklearn.metrics import pairwise_distances_chunked
+
+workdir = &#39;$demo_path&#39; #### input the demo path
+output_path = f&#39;{workdir}/demo4_STARmap_to_MERFISH/demo_output&#39;
+os.makedirs(output_path,exist_ok=True)
+sdata = sc.read_h5ad(f&#39;{workdir}/demo4_STARmap_to_MERFISH/data/STARmap_vs_MERFISH.h5ad&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Using backend: pytorch
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>sample_list= [&#39;STARmap&#39;,&#39;MERFISH&#39;]
+batch_key = &#39;batch&#39;
+coords_t = np.array(sdata.obs[[&#39;center_x&#39;, &#39;center_y&#39;]])
+CAST.plot_mid(coords_t[sdata.obs[batch_key] == sample_list[0]],
+         coords_t[sdata.obs[batch_key] == sample_list[1]],
+         output_path=output_path,
+         filename = &#39;Align_raw&#39;,
+         title_t = [sample_list[1],
+                    sample_list[0]],
+         s_t = 8,scale_bar_t = None)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_2_0.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_2_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>coords_raw,exps = CAST.extract_coords_exp(sdata, batch_key = &#39;batch&#39;, cols = [&#39;center_x&#39;, &#39;center_y&#39;], count_layer = &#39;.X&#39;, data_format = &#39;norm1e4&#39;)
+coords_sub,exp_sub,sub_node_idxs = CAST.sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000)
+torch.save(coords_raw, f&#39;{output_path}/coords_raw.pt&#39;)
+torch.save(sub_node_idxs, f&#39;{output_path}/sub_node_idxs.pt&#39;)
+torch.save(exp_sub, f&#39;{output_path}/exp_sub.pt&#39;)
+torch.save(coords_sub, f&#39;{output_path}/coords_sub.pt&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Preprocessing...
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/unix/ztang/02.tools/miniconda3/envs/zefang/lib/python3.9/site-packages/scanpy/preprocessing/_normalization.py:197: UserWarning: Some cells have zero counts
+  warn(UserWarning(&#39;Some cells have zero counts&#39;))
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>embed_dict = CAST.CAST_MARK(coords_sub,exp_sub,output_path,graph_strategy=&#39;delaunay&#39;)
+CAST.kmeans_plot_multiple(embed_dict,sample_list,coords_sub,&#39;demo1&#39;,output_path,k=20,dot_size = 10,minibatch=True)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Constructing delaunay graphs for 2 samples...
+Training on cuda:0...
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Loss: -435.143 step time=0.188s: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████| 400/400 [01:16&lt;00:00,  5.24it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Finished.
+The embedding, log, model files were saved to /home/unix/ztang/wanglab/tangzefang/03.Projects/05.CCF/06.warp_up_tutorials/01.data/demo4_STARmap_to_MERFISH/demo_output
+Perform KMeans clustering on 40000 cells...
+Plotting the KMeans clustering results...
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([18, 15, 16, ...,  8,  4, 11], dtype=int32)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_4_4.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_4_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_4_5.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_4_5.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_4_6.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_4_6.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>coords_raw2 = coords_raw.copy()
+for sample_t in sample_list:
+    coords_raw2[sample_t] = coords_raw2[sample_t] / coords_raw2[sample_t].max() * 22340
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>query_sample = sample_list[0]
+params_dist = CAST.reg_params(dataname = query_sample,
+                            gpu = 0 if torch.cuda.is_available() else -1,
+                            #### Affine parameters
+                            iterations=150,
+                            dist_penalty1=0,
+                            bleeding=500,
+                            d_list = [3,2,1,1/2,1/3],
+                            attention_params = [None,3,1,0],
+                            #### FFD parameters
+                            dist_penalty2 = [0],
+                            alpha_basis_bs = [500],
+                            meshsize = [8],
+                            iterations_bs = [40],
+                            attention_params_bs = [[None,3,1,0]],
+                            mesh_weight = [None])
+params_dist.alpha_basis = torch.Tensor([1/1000,1/1000,1/50,5,5]).reshape(5,1).to(params_dist.device)
+coord_final = CAST.CAST_STACK(coords_raw2,embed_dict,output_path,sample_list,params_dist,sub_node_idxs = sub_node_idxs) # v3.0
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Loss: 4166.345: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 150/150 [00:21&lt;00:00,  7.10it/s]
+/home/unix/ztang/02.tools/miniconda3/envs/zefang/lib/python3.9/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  /opt/conda/conda-bld/pytorch_1634272204863/work/aten/src/ATen/native/TensorShape.cpp:2157.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Loss: 2981.444: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 40/40 [00:07&lt;00:00,  5.44it/s]
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 40/40 [00:00&lt;00:00, 148.81it/s]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_1.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_2.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_3.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_4.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_5.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_5.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_6.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_6.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_7.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_7.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_8.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_8.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_9.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_9.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_10.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_10.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_6_11.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_6_11.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>coord_final = torch.load(f&#39;{output_path}/STARmap_align_to_MERFISH_coords_final.data&#39;)
+
+sample_list= [&#39;STARmap&#39;,&#39;MERFISH&#39;]
+embed_dict = torch.load(f&#39;{output_path}/demo_embed_dict.pt&#39;,map_location=&#39;cpu&#39;)
+sub_node_idxs = torch.load(f&#39;{output_path}/sub_node_idxs.pt&#39;)
+
+coords_sub_new = dict()
+for sample_t in sample_list:
+    coords_sub_new[sample_t] = coord_final[sample_t][sub_node_idxs[sample_t],:]
+CAST.kmeans_plot_multiple(embed_dict,sample_list,coords_sub_new,&#39;demo1_new&#39;,output_path,k=20,dot_size = 10,minibatch=True,plot_strategy=&#39;stack&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Perform KMeans clustering on 40000 cells...
+Plotting the KMeans clustering results...
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([18, 15, 16, ...,  8,  4, 11], dtype=int32)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_demo4_STARmap_to_MERFISH_7_2.png" src="../_images/notebooks_demo4_STARmap_to_MERFISH_7_2.png" />
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="demo3_CAST_project.html" class="btn btn-neutral float-left" title="Demo3 CAST Project" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Zefang Tang; Shuchen Luo; Xiao Wang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

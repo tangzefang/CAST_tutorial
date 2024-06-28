@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo3 CAST Project &mdash; CAST Latest documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=4222aa8f"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Demo4 STARmap to MERFISH" href="demo4_STARmap_to_MERFISH.html" />
+    <link rel="prev" title="Demo2 CAST Stack Align S4 to S1" href="demo2_CAST_Stack_Align_S4_to_S1.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CAST
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Tutorials:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="demo1_CAST_mark.html">Demo1 CAST Mark captures common spatial features across multiple samples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo2_CAST_Stack_Align_S4_to_S1.html">Demo2 CAST Stack Align S4 to S1</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Demo3 CAST Project</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#CAST-Project-to-project-the-STARmap-data-to-the-RIBOmap-data">CAST Project to project the STARmap data to the RIBOmap data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demo4_STARmap_to_MERFISH.html">Demo4 STARmap to MERFISH</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CAST</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Demo3 CAST Project</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/demo3_CAST_project.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Demo3-CAST-Project">
+<h1>Demo3 CAST Project<a class="headerlink" href="#Demo3-CAST-Project" title="Link to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">CAST</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="n">work_dir</span> <span class="o">=</span> <span class="s1">&#39;$demo_path&#39;</span> <span class="c1">#### input the demo path</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">work_dir</span><span class="si">}</span><span class="s1">/demo3_CAST_Projection/demo_output&#39;</span>
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">graph_list</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rep1&#39;</span><span class="p">:[</span><span class="s1">&#39;STAR_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;RIBO_rep1&#39;</span><span class="p">]}</span> <span class="c1"># source_sample, target_sample</span>
+</pre></div>
+</div>
+</div>
+<section id="CAST-Project-to-project-the-STARmap-data-to-the-RIBOmap-data">
+<h2>CAST Project to project the STARmap data to the RIBOmap data<a class="headerlink" href="#CAST-Project-to-project-the-STARmap-data-to-the-RIBOmap-data" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## This dataset contains 4 samples (STAR_rep1, RIBO_rep1, STAR_rep2, RIBO_rep2) and integrated features (&#39;X_pca_harmony&#39;)</span>
+<span class="n">sdata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s1">/../data/demo3.h5ad&#39;</span><span class="p">)</span>
+<span class="n">sdata</span> <span class="o">=</span> <span class="n">CAST</span><span class="o">.</span><span class="n">preprocess_fast</span><span class="p">(</span><span class="n">sdata</span><span class="p">,</span><span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">)</span>
+<span class="n">batch_key</span> <span class="o">=</span> <span class="s1">&#39;sample&#39;</span>
+</pre></div>
+</div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">CAST_PROJECT()</span></code> function is used to project the <code class="docutils literal notranslate"><span class="pre">source_sample</span></code> (query sample) to <code class="docutils literal notranslate"><span class="pre">target_sample</span></code> (reference sample).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sdata_refs</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">list_ts</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">color_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;TEPN&#39;</span><span class="p">:</span> <span class="s1">&#39;#256b00&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;INH&#39;</span><span class="p">:</span> <span class="s1">&#39;#ee750a&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CHO_PEP&#39;</span><span class="p">:</span> <span class="s1">&#39;#f280cf&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;DE_MEN&#39;</span><span class="p">:</span> <span class="s1">&#39;#f24f4b&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;AC&#39;</span><span class="p">:</span> <span class="s1">&#39;#e8e879&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;OLG&#39;</span><span class="p">:</span> <span class="s1">&#39;#a8e1eb&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;VAS&#39;</span><span class="p">:</span> <span class="s1">&#39;#395ba8&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;CHOR_EPEN&#39;</span><span class="p">:</span> <span class="s1">&#39;#697491&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;PVM&#39;</span><span class="p">:</span> <span class="s1">&#39;#8803fc&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;MLG&#39;</span><span class="p">:</span> <span class="s1">&#39;#23ccb8&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;OPC&#39;</span><span class="p">:</span> <span class="s1">&#39;#667872&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Other&#39;</span><span class="p">:</span> <span class="s1">&#39;#ebebeb&#39;</span>
+    <span class="p">}</span>
+<span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="n">graph_list</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Start the </span><span class="si">{</span><span class="n">rep</span><span class="si">}</span><span class="s1"> samples:&#39;</span><span class="p">)</span>
+    <span class="n">source_sample</span><span class="p">,</span> <span class="n">target_sample</span> <span class="o">=</span> <span class="n">graph_list</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span>
+    <span class="n">output_path_t</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">source_sample</span><span class="si">}</span><span class="s1">_to_</span><span class="si">{</span><span class="n">target_sample</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_path_t</span><span class="p">,</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">sdata_refs</span><span class="p">[</span><span class="n">rep</span><span class="p">],</span><span class="n">list_ts</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span> <span class="o">=</span> <span class="n">CAST</span><span class="o">.</span><span class="n">CAST_PROJECT</span><span class="p">(</span>
+        <span class="n">sdata_inte</span> <span class="o">=</span> <span class="n">sdata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sdata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">batch_key</span><span class="p">],[</span><span class="n">source_sample</span><span class="p">,</span> <span class="n">target_sample</span><span class="p">])],</span> <span class="c1"># the integrated dataset</span>
+        <span class="n">source_sample</span> <span class="o">=</span> <span class="n">source_sample</span><span class="p">,</span> <span class="c1"># the source sample name</span>
+        <span class="n">target_sample</span> <span class="o">=</span> <span class="n">target_sample</span><span class="p">,</span> <span class="c1"># the target sample name</span>
+        <span class="n">coords_source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sdata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sdata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">batch_key</span><span class="p">],</span><span class="n">source_sample</span><span class="p">),:]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">]]),</span> <span class="c1"># the coordinates of the source sample</span>
+        <span class="n">coords_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sdata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sdata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">batch_key</span><span class="p">],</span><span class="n">target_sample</span><span class="p">),:]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">]]),</span> <span class="c1"># the coordinates of the target sample</span>
+        <span class="n">scaled_layer</span> <span class="o">=</span> <span class="s1">&#39;log1p_norm_scaled&#39;</span><span class="p">,</span> <span class="c1"># the scaled layer name in `adata.layers`, which is used to be integrated</span>
+        <span class="n">batch_key</span> <span class="o">=</span> <span class="n">batch_key</span><span class="p">,</span> <span class="c1"># the column name of the samples in `obs`</span>
+        <span class="n">source_sample_ctype_col</span> <span class="o">=</span> <span class="s1">&#39;cell_type&#39;</span><span class="p">,</span> <span class="c1"># the column name of the cell type in `obs`</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">output_path_t</span><span class="p">,</span> <span class="c1"># the output path</span>
+        <span class="n">integration_strategy</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1"># &#39;Harmony&#39; or None (use existing integrated features)</span>
+        <span class="n">color_dict</span> <span class="o">=</span> <span class="n">color_dict</span> <span class="c1"># the color dict for the cell type</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="demo2_CAST_Stack_Align_S4_to_S1.html" class="btn btn-neutral float-left" title="Demo2 CAST Stack Align S4 to S1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="demo4_STARmap_to_MERFISH.html" class="btn btn-neutral float-right" title="Demo4 STARmap to MERFISH" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Zefang Tang; Shuchen Luo; Xiao Wang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
