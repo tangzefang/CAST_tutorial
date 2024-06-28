@@ -20,6 +20,10 @@ CAST is composed of three modules: CAST Mark, CAST Stack, and CAST Projection.
    notebooks/demo2_CAST_Stack_Align_S4_to_S1.ipynb
    notebooks/demo3_CAST_project.ipynb
    notebooks/demo4_STARmap_to_MERFISH.ipynb
+   notebooks/demo5_Visium.ipynb
+   notebooks/demo6_STARmap_to_SlideSeq.ipynb
+   notebooks/demo7_ARTISTA.ipynb
+   notebooks/demo8_ARTISTA_delta_Analysis.ipynb
 
 .. image:: /_static/Diagram.png
    :alt: Diagram of CAST
