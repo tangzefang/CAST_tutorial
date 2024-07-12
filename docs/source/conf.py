@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'CAST'
-copyright = '2024, Zefang Tang; Shuchen Luo; Xiao Wang'
-author = 'Zefang Tang; Shuchen Luo; Xiao Wang'
+copyright = '2024, Zefang Tang; Shuchen Luo; Jessica Pan; Xiao Wang'
+author = 'Zefang Tang; Shuchen Luo; Jessica Pan; Xiao Wang'
 release = 'Latest'
 
 # -- General configuration ---------------------------------------------------
