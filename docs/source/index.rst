@@ -30,3 +30,15 @@ CAST is composed of three modules: CAST Mark, CAST Stack, and CAST Projection.
    :align: center
    :width: 100%
 
+.. toctree::
+   :maxdepth: 2
+   :caption: API:
+
+   api_source/modules 
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
