@@ -71,7 +71,19 @@ def coords2adjacentmat(coords,output_mode = 'adjacent',strategy_t = 'convex'):
 
 def hv_cutoff(max_col,threshold_cell_num=2000):
     """
-    Returns the highest integer threshold such that the at least threshold_cell_num cells have expression (in max_col) > threshold 
+    Returns the highest integer threshold such that the at least threshold_cell_num cells have a max_col value greater than the threshold.
+
+    Parameters
+    ----------
+    max_col : np.ndarray
+        The data to threshold.
+    threshold_cell_num : int, optional (default: 2000)
+        The threshold such that at least threshold_cell_num cells have a max_col value greater than the threshold.
+
+    Returns
+    -------
+    thres_t : int
+        The highest integer threshold such that the at least threshold_cell_num cells have a max_col value greater than the threshold. 
     """
     for thres_t in range(0,int(np.max(max_col))):
         if np.sum(max_col > thres_t) < threshold_cell_num:
@@ -79,7 +91,7 @@ def hv_cutoff(max_col,threshold_cell_num=2000):
 
 def detect_highly_variable_genes(sdata,batch_key = 'batch',n_top_genes = 4000,count_layer = 'count'):
     """
-    Find the genes that have high expression in at least one cell in all batches.
+    Finds the genes that have high expression in at least one cell in all batches.
 
     Parameters
     ----------
@@ -88,17 +100,17 @@ def detect_highly_variable_genes(sdata,batch_key = 'batch',n_top_genes = 4000,co
     batch_key : str, optional (default: 'batch')
         The column name of the samples in sdata.obs
     n_top_genes : int, optional (default: 4000)
-        The number of genes to keep - the function will output at least this many genes.
+        The number of genes to keep - the function result may contain more genes than this because it uses the smallest integer threshold to get at least this many genes.
     count_layer : str, optional (default: 'count')
-        The layer in sdata.layers to use for the count data
+        The layer in sdata.layers to use for the count data.
         If count_layer is '.X', the function will use sdata.X for the count data.
 
     Returns
     -------
     highly_variable_genes : np.ndarray
-        A boolean array of which genes that are highly variable across all batches.
-
+        A boolean array of which genes are highly variable across all batches.
     """
+
     samples = np.unique(sdata.obs[batch_key])
     thres_list = []
     max_count_list = []
@@ -124,7 +136,7 @@ def detect_highly_variable_genes(sdata,batch_key = 'batch',n_top_genes = 4000,co
 
 def extract_coords_exp(sdata, batch_key = 'batch', cols = 'spatial', count_layer = 'count', data_format = 'norm1e4',ifcombat = False, if_inte = False):
     """
-    Extract the spatial data and gene expression data for each sample.
+    Extracts the spatial data and gene expression data for each sample.
 
     Parameters
     ----------
@@ -132,13 +144,13 @@ def extract_coords_exp(sdata, batch_key = 'batch', cols = 'spatial', count_layer
         Annotated data matrix.
     batch_key : str, optional (default: 'batch')
         The column name of the samples in sdata.obs
-    cols : str | list, optional (default: 'spatial')
-        The column name of the coordinates in sdata.obs
+    cols : 'spatial' | list, optional (default: 'spatial')
+        The column name of the coordinates. If cols is 'spatial', the function will use sdata.obsm['spatial'] for the coordinates. Otherwise, the function will use sdata.obs[cols] for the coordinates.
     count_layer : str, optional (default: 'count')
-        The layer in sdata.layers to use for the count data
+        The layer in sdata.layers to use for the count data.
         If count_layer is '.X', the function will use sdata.X for the count data.
     data_format : str, optional (default: 'norm1e4')
-        The format of the data.
+        The name of the layer in sdata.layers to use for the data.
     ifcombat : bool, optional (default: False)
         Whether or not to use ComBat to correct for batch effects.
     if_inte : bool, optional (default: False)
@@ -147,10 +159,11 @@ def extract_coords_exp(sdata, batch_key = 'batch', cols = 'spatial', count_layer
     Returns
     -------
     coords_raw : dict
-        The raw spatial data matrix with the coordinate position for each cell, indexed by sample.
+        The spatial data matrix with the coordinate position for each cell, indexed by sample name.
     exps : dict
-        The gene expression data for each coordinate in coords_raw.
+        The gene expression data for each coordinate in coords_raw, indexed by sample name.
     """
+
     coords_raw = {}
     exps = {}
     samples = np.unique(sdata.obs[batch_key])
@@ -211,7 +224,7 @@ def Harmony_integration(sdata_inte, scaled_layer, use_highly_variable_t, batch_k
     sdata_inte : AnnData
         Annotated data matrix.
     scaled_layer : str
-        The layer in sdata.layers to use for the scaled data.
+        The name of the layer in sdata.layers to use for the scaled data.
     use_highly_variable_t : bool
         Whether or not to use highly variable genes for the PCA.
     batch_key : str
@@ -274,12 +287,12 @@ def random_sample(coords_t, nodenum, seed_t = 2):
         The random indices will be sampled from the length of the first axis.
     nodenum : int
         The number of random indicies to return.
-    seed_t : int|None, optional (default: '2')
+    seed_t : int | None, optional (default: '2')
         The seed for the random package.
     
     Returns
     -------
-    sub_node_idx : 1D array
+    sub_node_idx : np.ndarray
         1D nodenum-length sorted array of random indicies.
     """
 
@@ -677,12 +690,14 @@ def delta_cell_cal(coords_tgt,coords_ref,ctype_tgt,ctype_ref,radius_px):
 
     Examples
     --------
-    coords_tgt = coords_final['injured']
-    coords_ref = coords_final['normal']
-    ctype_tgt = sdata.obs['Annotation'][right_idx]
-    ctype_ref = sdata.obs['Annotation'][left_idx]
-    radius_px = 1000
-    df_delta_cell_tgt, df_delta_cell_ref, df_delta_cell = delta_cell(coords_tgt, coords_ref, ctype_tgt, ctype_ref, radius_px)
+
+    * coords_tgt = coords_final['injured']
+    * coords_ref = coords_final['normal']
+    * ctype_tgt = sdata.obs['Annotation'][right_idx]
+    * ctype_ref = sdata.obs['Annotation'][left_idx]
+    * radius_px = 1000
+    * df_delta_cell_tgt, df_delta_cell_ref, df_delta_cell = delta_cell(coords_tgt, coords_ref, ctype_tgt, ctype_ref, radius_px)
+
     """
     ##### 1. generate nbhd_mask_tgt and nbhd_mask_ref.
     # nbhd_mask_tgt: coords_tgt vs coords_tgt itself.

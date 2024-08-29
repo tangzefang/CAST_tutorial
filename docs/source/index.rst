@@ -25,16 +25,16 @@ CAST is composed of three modules: CAST Mark, CAST Stack, and CAST Projection.
    notebooks/demo7_ARTISTA.ipynb
    notebooks/demo8_ARTISTA_delta_Analysis.ipynb
 
+.. toctree::
+   :maxdepth: 1
+   :caption: API:
+
+   api_source/modules 
+
 .. image:: /_static/Diagram.png
    :alt: Diagram of CAST
    :align: center
    :width: 100%
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API:
-
-   api_source/modules 
 
 
 Indices and tables

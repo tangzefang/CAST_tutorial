@@ -10,25 +10,25 @@ from tqdm import trange
 
 def train_seq(graphs, args, dump_epoch_list, out_prefix, model):
     """
-    The CAST MARK training function
+    Trains a model_GCNII.CCA_SSG model (using the CCA-SSG approach) for CAST Mark.
 
     Parameters 
     ----------
     graphs : List[Tuple(str, dgl.Graph, torch.Tensor)]
-        List of 3-member tuples, each tuple represents one tissue sample, containing sample name, a DGL graph object, and a feature matrix in the torch.Tensor format
+        List of 3-member tuples, where each tuple represents one tissue sample. The tuple elements are the sample name, a DGL graph object, and a feature matrix.
     args : model_GCNII.Args
         The Args object contains training parameters
-    dump_epoch_list : List
-        A list of epoch id you hope training snapshots to be dumped, for debug use, empty by default
+    dump_epoch_list : List[int]
+        A list of epoch iterations you hope training snapshots to be dumped for debugging 
     out_prefix : str
         File name prefix for the snapshot files
     model : model_GCNII.CCA_SSG
-        The GNN model
+        The untrained GNN model.
     
     Returns
     -------
-    Tuple(Dict, List, CCA_SSG)
-        A 3-member tuple, a dictionary containing the graph embeddings for each sample, a list of every loss value, and the trained model object
+    Tuple(Dict[str, torch.Tensor], List[float], model_GCNII.CCA_SSG)
+        A dictionary containing the graph embeddings for each sample, a list of the loss value per epoch, and the trained model.
     """
     model = model.to(args.device)
 
@@ -111,18 +111,18 @@ def train_seq(graphs, args, dump_epoch_list, out_prefix, model):
 # graph construction tools
 def delaunay_dgl(sample_name, df, output_path,if_plot=True,strategy_t = 'convex'):
     """
-    Construct a delaunay graph from a given dataframe
+    Constructs a delaunay graph from a given dataframe.
 
     Parameters
     ----------
     sample_name : str
-        The name of the sample
-    df : array-like
-        The array containing the coordinates of the points (gets cast to a numpy array)
+        The name of the sample.
+    df : array-like (castable to numpy array)
+        An array containing the coordinates of the points.
     output_path : str
-        The path to save the plot (if if_plot is True)
+        The path to save the plot (if if_plot is True).
     if_plot : bool, optional (default: True)
-        Whether to display and save the graph
+        Whether to display and save the graph.
     strategy_t : 'convex' | 'delaunay', optional (default: 'convex')
         The strategy to construct the delaunay graph
         Convex will use Veronoi polygons clipped to the convex hull of the points and their rook spatial weights matrix (with libpysal).

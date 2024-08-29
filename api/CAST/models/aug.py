@@ -40,25 +40,25 @@ def __mask_edge(graph, mask_prob):
 
 def random_aug(graph, x, feat_drop_rate, edge_mask_rate):
     """
-    Given a graph, randomly drop features and mask edges.
+    Given a graph, randomly drops features and masks edges.
 
     Parameters
     ----------
     graph : DGLGraph
-        The input graph
+        The input graph.
     x : torch.Tensor
-        The input features
+        The input features.
     feat_drop_rate : float
-        The probability of dropping a feature
+        The probability of dropping a feature.
     edge_mask_rate : float
-        The probability of masking an edge
+        The probability of masking an edge.
     
     Returns
     -------
     DGLGraph
-        The graph after randomly masking edges
+        The graph after randomly masking edges.
     torch.Tensor
-        The features after randomly dropping features
+        The features after randomly dropping features.
     """
 
     n_node = graph.number_of_nodes()
@@ -85,14 +85,14 @@ def drop_feature(x, drop_prob):
     Parameters
     ----------
     x : torch.Tensor
-        The input features
+        The input features.
     drop_prob : float
-        The probability of dropping a feature
+        The probability of dropping a feature.
     
     Returns
     -------
     torch.Tensor
-        The features after dropping
+        The remaining features after random dropping.
     """
     # boolean mask for dropping features with probability drop_prob
     drop_mask = th.empty( 
@@ -107,19 +107,19 @@ def drop_feature(x, drop_prob):
 
 def mask_edge(graph, mask_prob):
     """
-    Randomly mask edges with probability mask_prob
+    Randomly mask edges with probability mask_prob.
 
     Parameters
     ----------
     graph : DGLGraph
-        The input graph (only used to take the number of edges)
+        The input graph (only used to take the number of edges).
     mask_prob : float
-        The probability of masking an edge
+        The probability of masking an edge.
     
     Returns
     -------
     torch.Tensor
-        The indices of the edges to mask
+        A 1D tensor of indices of the remaining edges after random masking.
     """
 
     E = graph.number_of_edges()

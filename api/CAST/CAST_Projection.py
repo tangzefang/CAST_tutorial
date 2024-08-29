@@ -58,7 +58,7 @@ def space_project(sdata_inte, idx_source, idx_target, raw_layer,
     ifplot : bool, optional (default True)
         Whether to generate the evaluation plots.
     umap_feature : str, optional (default 'X_umap')
-        The column name in sdata_inte.obsm for UMAP data for the visualization.
+        The column name in sdata_inte.obsm to use for the UMAP for visualization and saving.
     ave_dist_fold : int, optional (default 2)
         A multiplicative factor on the average distance for the physical distance threshold.
     batch_t : str, optional (default '')
@@ -68,7 +68,7 @@ def space_project(sdata_inte, idx_source, idx_target, raw_layer,
     color_dict : dict, optional
         The color dictionary for the cell type annotation for visualization.
     adjust_shift : bool, optional (default False)
-        Whether to adjust the shift of the source cells (using group_shift). Only applies if source_sample_ctype_col is given. 
+        Whether to shift the coordinates of the source cells by the median shift between the target and source cells for each cell type (ignored if source_sample_ctype_col is not given). 
     metric_t : str, optional (default 'cosine')
         The metric to use for the pairwise distance calculations.
     working_memory_t : int, optional (default 1000)

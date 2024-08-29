@@ -7,35 +7,38 @@ from models.model_GCNII import Args, CCA_SSG
 
 def CAST_MARK(coords_raw_t,exp_dict_t,output_path_t,task_name_t = None,gpu_t = None,args = None,epoch_t = None, if_plot = True, graph_strategy = 'convex'):
     """
-    Run CAST Mark — CAST Mark captures common spatial features across multiple samples by training a self-supervised graph neural network model on the delaunay graphs of the samples.
-    Save the embeddings, log, and model files to the output path, as well as the delaunay graphs for each sample. 
-    Print the training log and delaunay graphs for each sample if if_plot is True. 
+    Runs CAST Mark, which captures common spatial features across samples using a self-supervised graph neural network. 
+    
+    Saves the Delaunay triangulation for each sample, the training log, and the final embeddings and model files to the output path. 
+    If if_plot is true, prints the Delaunay triangulation for each sample and the training log. 
  
     Parameters
     ----------
-    coords_raw_t : dict
-        A dictionary with the sample names as keys and the spatial coordinates as values (gets cast as a np.array).
-    exp_dict_t : dict
-        A dictionary with the sample names as keys and the gene expression data as values (gets cast as a torch.Tensor).
+    coords_raw_t : dict[str, array-like (castable to numpy array)]
+        A dictionary with the sample names as keys and the spatial coordinates as values.
+    exp_dict_t : dict[str, array-like (castable to torch.Tensor)]
+        A dictionary with the sample names as keys and the gene expression data as values.
     output_path_t : str
         The output path.
-    task_name_t : str, optional 
-        The task name, used to save the log file. The default is task1.
-    gpu_t : int, optional (default: None)
-        The GPU id. If None, the GPU id is set to 0 if a GPU is available.
+    task_name_t : str, optional (default: 'task1')
+        The task name, used to save the log file. 
+    gpu_t : int, optional
+        The GPU id. If omitted, the GPU ID is set to 0 if a GPU is available.
     args : Args, optional
-        The parameters for the model. If None, the default parameters are used.
+        The parameters for the model. If omitted, the default parameters are used.
     epoch_t : int, optional
-        The number of epochs for training. If not provided, the number of epochs in args is used (default 400)
+        The number of epochs for training. If omitted, the number of epochs in args is used (default 400).
     if_plot : bool, optional (default: True)
         Whether or not to plot the results. 
-    graph_strategy : str, optional (default: 'convex')
-        The strategy to construct the delaunay graph. Options are 'convex' and 'knn'.
+    graph_strategy : 'convex' | 'delaunay', optional (default: 'convex')
+        The strategy used to construct the delaunay graph for each sample.
+        Convex will use Veronoi polygons clipped to the convex hull of the points and their rook spatial weights matrix (with libpysal).
+        Delaunay will use the Delaunay triangulation (with sciipy).
     
     Returns
     -------
-    embed_dict : dict
-        A dictionary with the sample names as keys and the embeddings as values.
+    embed_dict : dict[str, torch.Tensor]
+        A dictionary with the sample names as keys and their corresponding graph embeddings as values.
     """
 
     ### settings
@@ -87,44 +90,58 @@ def CAST_MARK(coords_raw_t,exp_dict_t,output_path_t,task_name_t = None,gpu_t = N
 
 def CAST_STACK(coords_raw,embed_dict,output_path,graph_list,params_dist= None,tmp1_f1_idx = None, mid_visual = False, sub_node_idxs = None, rescale = False, corr_q_r = None, if_embed_sub = False, early_stop_thres = None):
     """
-    Run CAST Stack - CAST Stack aligns the spatial coordinates of the samples in the graph_list based on the graph embeddings through gradient-descent-based rigid registration and free-form deformation (FFD). 
+    Runs CAST Stack, which aligns the spatial coordinates of the samples in the graph_list based on their graph embeddings using gradient-descent-based rigid registration and free-form deformation (FFD). 
     Saves the final coordinates, intermediate results, and the registration parameters to the output path.
     Prints the intermediate results if mid_visual is True.
 
     Parameters
     ----------
-    coords_raw : dict
-        A dictionary with the sample names as keys and the spatial coordinates as values (as np.arrays).
-    embed_dict : dict
-        A dictionary with the sample names as keys and the embeddings as values (as torch.Tensors).
+    coords_raw : dict[str, np.array]
+        A dictionary with sample names as keys and their spatial coordinates as values.
+    embed_dict : dict[str, torch.Tensor]
+        A dictionary with sample names as keys and their graph embeddings as values (such as the output from CAST Mark).
     output_path : str
         The output folder path.
     graph_list : list[str]
-        The list of the sample names [query sample, reference sample].
+        A two-member list of the query sample name and the reference sample name. The query sample is aligned to the reference sample.
     params_dist : reg_params, optional
-        The registration parameters. If omitted, the default parameters are used.
-        See demo 2 for a full description of the parameters.
+        The registration parameters. If omitted, the default parameters are used. The default parameters include the following:
+
+        - dataname: the query sample name
+        - gpu: 0
+        - iterations: 500
+        - dist_penalty1: 0
+        - bleeding: 500
+        - d_list: [3,2,1,1/2,1/3]
+        - attention_params: [None,3,1,0]
+        - dist_penalty2: [0]
+        - alpha_basis_bs: [500]
+        - meshsize: [8]
+        - iterations_bs: [400]
+        - attention_params_bs: [[tmp1_f1_idx,3,1,0]]
+        - mesh_weight: [None]
+
     tmp1_f1_idx : array-like, optional 
-        The attention region for the FFD (The True/False index of all the cells of the query sample)
-        If tmp1_f1_idx or params_dist is omitted, no attention region is used  
+        The attention region for the FFD (a True/False index of all the cells of the query sample).
+        If tmp1_f1_idx or params_dist is omitted, no attention region is used.
     mid_visual : bool, optional (default: False)
         Whether to plot the intermediate results.
-    sub_node_idxs : dict, optional
-        A dictionary with the sample names as keys and the values are bitmasks indicating whether each cell should be used for alignment (as np.arrays).
-        If omitted, use all coordinates for the alignment.
+    sub_node_idxs : dict[str, np.array], optional
+        A dictionary where keys are sample names and values are bitmasks indicating whether each cell should be used for alignment.
+        If omitted, all coordinates are used for alignment.
     rescale : bool, optional (default: False)
         Whether to rescale the coordinates (by 22340 / the sample max).
     corr_q_r : np.array, optional
         The correlation matrix between the query and reference graph embeddings. If omitted, the correlation matrix is calculated.
     if_embed_sub : bool, optional (default: False)
-        Whether to use a subset of the embeddings (defined by sub)nodes_idxs).
+        Whether to use a subset of the embeddings (defined by sub_nodes_idxs) to calculate the correlation matrix and plot the results.
     early_stop_thres : float, optional
         The early stopping threshold for detecting a plateau in affine gradient descent. If omitted, no early stopping is done.
     
     Returns
     -------
-    coords_final : dict
-        A dictionary with the sample names as keys and the final coordinates as values (as np.arrays).
+    coords_final : dict[str, np.array]
+        A dictionary with the sample names as keys and the final coordinates as values.
     """
 
     ### setting parameters
@@ -286,8 +303,8 @@ def CAST_PROJECT(sdata_inte, source_sample, target_sample, coords_source, coords
     color_dict = None, adjust_shift = False, metric_t = 'cosine', working_memory_t = 1000 
     ):
     """
-    Run CAST Project — CAST Project projects the source sample to the target sample based on the integrated data.
-    Save the projected dataset and distribution information to the output path. 
+    Runs CAST Project, an unsupervised, label-free method to project single cells from the query samples onto a reference sample toward spatially resolved single-cell multi-omics. 
+    Saves the projected dataset and distribution information to the output path. 
     
     Parameters
     ----------
@@ -302,51 +319,51 @@ def CAST_PROJECT(sdata_inte, source_sample, target_sample, coords_source, coords
     coords_target : array-like
         The coordinates of the target sample.
     scaled_layer : str, optional (default: 'log2_norm1e4_scaled')
-        The scaled layer name in `adata.layers`, which is used to be integrated.
+        The name of the layer in sdata_inte.layers to use to find the scaled data.
     raw_layer : str, optional (default: 'raw')
-        The raw layer name in `adata.layers`, which is used to be projected into target sample.
+        The name of the layer in sdata_inte.layers to use to find the raw data.
     batch_key : str, optional (default: 'protocol')
-        The column name of the samples in `obs`.
+        The column name of the samples in `sdata_inte.obs`.
     use_highly_variable_t : bool, optional (default: True)
         Whether to use highly variable genes.
     ifplot : bool, optional (default: True)
         Whether to plot the result.
     n_components : int, optional (default: 50)
-        The `n_components` parameter in `sc.pp.pca`.
+        The `n_components` parameter in `sc.pp.pca` for Harmony integration (ignored if integration_strategy is not 'Harmony').
     umap_n_neighbors : int, optional (default: 50)
-        The `n_neighbors` parameter in `sc.pp.neighbors`.
+        The `n_neighbors` parameter in `sc.pp.neighbors` for Harmony integration (ignored if integration_strategy is not 'Harmony').
     umap_n_pcs : int, optional (default: 30)
-        The `n_pcs` parameter in `sc.pp.neighbors`.
+        The `n_pcs` parameter in `sc.pp.neighbors` for Harmony integration (ignored if integration_strategy is not 'Harmony').
     min_dist : float, optional (default: 0.01)
-        The `min_dist` parameter in `sc.tl.umap`.
+        The `min_dist` parameter in `sc.tl.umap` for Harmony integration (ignored if integration_strategy is not 'Harmony').
     spread_t : int, optional (default: 5)
-        The `spread` parameter in `sc.tl.umap`.
+        The `spread` parameter in `sc.tl.umap` for Harmony integration (ignored if integration_strategy is not 'Harmony').
     k2 : int, optional (default: 1)
-        Select k2 cells to do the projection for each cell.
+        The number of nearest neighbors to consider.
     source_sample_ctype_col : str, optional (default: 'level_2')
-        The column name of the cell type in `obs`.
+        The column name of the cell type annotation in the source sample (in `sdata_inte.obs`). 
     output_path : str, optional (default: '')
         The output path.
     umap_feature : str, optional (default: 'X_umap')
-        The feature used for umap.
+        The column name in sdata_inte.obsm to use for the UMAP data for visualization and saving.
     pc_feature : str, optional (default: 'X_pca_harmony')
-        The feature used for the projection.
+        The column name in sdata_inte.obsm to use for the principle component data of the samples.
     integration_strategy : 'Harmony' | None, optional (default: 'Harmony')
-        Whether to run Harmony integration or use existing integrated features in pc_feature and umap_feature.
+        Whether to run Harmony integration.
     ave_dist_fold : int, optional (default: 3)
         A multiplicative factor on the average distance for the physical distance threshold.
     save_result : bool, optional (default: True)
         Whether to save the results.
     ifcombat : bool, optional (default: True)
-        Whether to use combat when using the Harmony integration.
+        Whether to use combat when doing the Harmony integration (ignored if integration_strategy is not 'Harmony').
     alignment_shift_adjustment : int, optional (default: 50)
         An additive factor on the average distance for the physical distance threshold. 
     color_dict : dict, optional
         The color dictionary for cell type annotation in visualizations.
     adjust_shift : bool, optional (default: False)
-        Whether to adjust the shift of the source cells (using group_shift).
+        Whether to shift the coordinates of the source cells by the median shift between the target and source cells for each cell type (ignored if source_sample_ctype_col is not given). 
     metric_t : str, optional (default: 'cosine')
-        The metric for the pairwise distance calculation.
+        The metric for pairwise distance calculation.
     working_memory_t : int, optional (default: 1000)
         The sought maximum memory for the chunked pairwise distance calculations.
     

@@ -13,33 +13,33 @@ class Args:
 
     #: The name of the dataset, used to save the log file
     dataname : str 
-    #: The GPU id, set to zero for single-GPU nodes
+    #: The GPU ID, set to zero for single-GPU nodes (default: 0)
     gpu : int = 0 
 
-    #: The number of epochs for training 
+    #: The number of epochs for training (default: 1000)
     epochs : int = 1000
 
-    #: The learning rate 
+    #: The learning rate (default: 1e-3)
     lr1 : float = 1e-3 
-    #: The weight decay
+    #: The weight decay (default: 0)
     wd1 : float = 0.0 
-    #: lambda in the loss function, refer to online methods
+    #: The lambda in the loss function, refer to online methods (default: 1e-3)
     lambd : float = 1e-3 
 
-    #: number of GCNII layers, more layers mean a deeper model, larger reception field, at a cost of VRAM usage and computation time
+    #: The number of GCNII layers - more layers mean a deeper model, larger reception field, at the cost of VRAM usage and computation time (default: 9)
     n_layers : int = 9 
 
-    #: edge dropout rate in CCA-SSG
+    #: The edge dropout rate in CCA-SSG (default: 0.2)
     der : float = 0.2 
-    #: feature dropout rate in CCA-SSG
+    #: The feature dropout rate in CCA-SSG (default: 0.2)
     dfr : float = 0.2 
 
-    #: perform a single-layer dimension reduction before the GNNs, helps save VRAM and computation time if the gene panel is large
+    #: Set to 'cuda:{GPU_ID}' if GPU is available and gpu != -1, otherwise set to 'cpu'
     device : str = field(init=False) 
 
-    #: encoder dimension, ignore if `use_encoder` set to `False`
+    #: The encoder dimension, ignored if `use_encoder` set to False (default: 256)
     encoder_dim : int = 256 
-    #: whether or not to use an encoder
+    #: Whether or not to use an encoder (default: False)
     use_encoder : bool = False 
 
     def __post_init__(self):
@@ -52,19 +52,19 @@ class Args:
 # fix the div zero standard deviation bug, Shuchen Luo (20220217)
 def standardize(x, eps = 1e-12):
     """
-    Standardizes the input features (subtracts the mean and divides by std).
+    Standardizes values in x (subtracts the mean and divides by std).
 
     Parameters
     ----------
     x : torch.Tensor
-        The input features
+        The input features.
     eps : float
-        The epsilon value to prevent division by zero
+        An epsilon value to prevent division by zero.
     
     Returns
     -------
     torch.Tensor
-        The standardized features
+        The standardized features.
     """
     
     return (x - x.mean(0)) / x.std(0).clamp(eps)
@@ -72,48 +72,58 @@ def standardize(x, eps = 1e-12):
 class Encoder(nn.Module):
     """
     A class representing an encoder model with a linear layer and ReLU activation function.
+
+    Attributes 
+    ----------
+    in_dim : int
+        The number of input features.
+    encoder_dim : int
+        The number of output features.
     """
     def __init__(self, in_dim : int, encoder_dim : int):
-        """
-        Parameters 
-        ----------
-        in_dim : int
-            The number of input features
-        encoder_dim : int
-            The number of output features
-        """
         super().__init__()
         self.layer = nn.Linear(in_dim, encoder_dim, bias=True)
         self.relu = nn.ReLU()
     def forward(self, x):
+        """
+        Performs a forward pass through the encoder.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            The input features.
+        
+        Returns
+        -------
+        torch.Tensor
+            The output features after the forward pass.
+        """
         return self.relu(self.layer(x))
 
 
 # GCN2Conv(in_feats, layer, alpha=0.1, lambda_=1, project_initial_features=True, allow_zero_in_degree=False, bias=True, activation=None)
 class GCNII(nn.Module):
     """
-    A class representing a GCNII model - a model for self-supervised represenation learning with graph data.
-    The model consists of an optional encoder, followed by n_layers GCN2Conv layers, where the first layer is passed to every layer.
+    A class representing a GCNII model.
+    The model consists of an optional encoder, followed by GCN2Conv layers, where the first layer is passed to every layer.
+
+    Attributes 
+    ----------
+    in_dim : int
+        The number of input features.
+    encoder_dim : int
+        The number of output features of the encoder (ignored if use_encoder is false).
+    n_layers : int
+        The number of GCN2Conv layers.
+    alpha : List[float] (default: 0.1 for each layer)
+        The alpha values for each layer.
+    lambda_ : List[float] (default: 1 for each layer)
+        The lambda values for each layer.
+    use_encoder : bool (default: False)
+        Whether or not to use an encoder.
     """
 
     def __init__(self, in_dim : int, encoder_dim: int, n_layers : int, alpha=None, lambda_=None, use_encoder=False):
-        """
-        Parameters 
-        ----------
-        in_dim : int
-            The number of input features
-        encoder_dim : int
-            The number of output features of the encoder
-        n_layers : int
-            The number of GCNII layers
-        alpha : List[float] (default: 0.1 for each layer)
-            The alpha values for each layer
-        lambda_ : List[float] (default: 1 for each layer)
-            The lambda values for each layer
-        use_encoder : bool
-            Whether or not to use an encoder
-        
-        """
 
         super().__init__()
 
@@ -148,14 +158,14 @@ class GCNII(nn.Module):
         Parameters
         ----------
         graph : DGLGraph
-            The input graph
+            The input graph.
         x : torch.Tensor
-            The input features
+            The input.
         
         Returns
         -------
         torch.Tensor
-            The output features after the forward pass
+            The output of the forward pass.
         """
 
         if self.use_encoder:
@@ -169,23 +179,22 @@ class GCNII(nn.Module):
     
 class GCN(nn.Module):
     """
-    A class representing a GCN model - a model for self-supervised represenation learning with graph data.
+    A class representing a GCN model.
     The model consists of an optional encoder, followed by n_layers GraphConv layers
+
+    Attributes
+    ----------
+    in_dim : int
+        The number of input features.
+    encoder_dim : int
+        The number of output features of the encoder (ignored if use_encoder is false).
+    n_layers : int
+        The number of GraphConv layers.
+    use_encoder : bool (default: False)
+        Whether or not to use an encoder.
     """
+
     def __init__(self, in_dim : int, encoder_dim: int, n_layers : int, use_encoder=False):
-        """
-        
-        Parameters
-        ----------
-        in_dim : int
-            The number of input features
-        encoder_dim : int
-            The number of output features of the encoder
-        n_layers : int
-            The number of GCN layers
-        use_encoder : bool
-            Whether or not to use an encoder
-        """
         super().__init__()
 
         self.n_layers = n_layers
@@ -203,6 +212,22 @@ class GCN(nn.Module):
             self.convs.append(GraphConv(self.hid_dim, self.hid_dim, activation=None)) # ReLU activation is used
 
     def forward(self, graph, x):
+        """
+        Forward pass through the GCN model.
+        
+        Parameters
+        ----------
+        graph : DGLGraph
+            The input graph.
+        x : torch.Tensor
+            The input.
+        
+        Returns
+        -------
+        torch.Tensor
+            The output of the forward pass.
+        """
+
         if self.use_encoder:
             x = self.encoder(x)
         # print('GCN forward: after encoder', torch.any(torch.isnan(x)))
@@ -219,16 +244,22 @@ class CCA_SSG(nn.Module):
 
     Attributes
     ----------
+    in_dim : int
+        The number of input features.
+    encoder_dim : int
+        The number of output features of the encoder (ignored if use_encoder is false).
+    n_layers : int
+        The number of layers in the model excluding the optional encoder. 
     backbone : GCNII | GCN
-        The backbone of the model, either GCNII or GCN.
-    
-    Methods
-    -------
-    get_embedding(graph, feat)
-        Returns the embeddings of the input features.
-    forward(graph1, feat1, graph2, feat2)
-        Returns the standardized embeddings of the input features after a foward pass through the backbone model.
+        The backbone of the model, either GCNII or GCN -- in initialization, provide 'GCNII' | 'GCN' as a string.
+    alpha : List[float] (default: 0.1 for each layer)
+        The alpha values for each layer in GCNII (ignored if backbone is GCN).
+    lambda_ : List[float] (default: 1 for each layer)
+        The lambda values for each layer in GCNII (ignored if backbone is GCN).
+    use_encoder : bool (default: False)
+        Whether or not to use an encoder.
     """
+
     def __init__(self, in_dim, encoder_dim, n_layers, backbone='GCNII', alpha=None, lambda_=None, use_encoder=False):
         super().__init__()
         if backbone == 'GCNII':
@@ -237,10 +268,45 @@ class CCA_SSG(nn.Module):
             self.backbone = GCN(in_dim, encoder_dim, n_layers, use_encoder)
 
     def get_embedding(self, graph, feat):
+        """
+        Returns the result of a forward pass on feat.
+
+        Parameters
+        ----------
+        graph : DGLGraph
+            The input graph.
+        feat : torch.Tensor
+            The input features.
+        
+        Returns
+        -------
+        torch.Tensor
+            The result of the forward pass on the input features.
+        """
         out = self.backbone(graph, feat)
         return out.detach()
 
     def forward(self, graph1, feat1, graph2, feat2):
+        """
+        Returns the standardized embeddings of the input features after a forward pass through the backbone model.
+    
+        Parameters
+        ----------
+        graph1 : DGLGraph
+            The first input graph.
+        feat1 : torch.Tensor
+            The input features for the first input.
+        graph2 : DGLGraph
+            The second input graph.
+        feat2 : torch.Tensor
+            The features for the second input.
+
+        Returns
+        -------
+        Tuple[torch.Tensor, torch.Tensor]
+            The standardized outputs from running each input through a forward pass of the model.
+        """
+
         h1 = self.backbone(graph1, feat1)
         h2 = self.backbone(graph2, feat2)
         # print('CCASSG forward: h1 is', torch.any(torch.isnan(h1)))

@@ -89,13 +89,13 @@ class reg_params:
     #: The weight matrix for the mesh grid. The same size of the mesh or None.
     mesh_weight : list[float] = field(default_factory=list) 
 
-    #: Iterations of the FFD.
+    #: Number of iterations of the FFD.
     iterations_bs : list[float] = field(default_factory=list)   
 
     #: The learning rate for the FFD transformation.
     alpha_basis_bs : list[float] = field(default_factory=list) 
 
-    #: Mesh size for the FFD.
+    #: The mesh size for the FFD.
     meshsize : list[float] = field(default_factory=list)  
 
     #: The maximum x and y coordinates of the image. 
