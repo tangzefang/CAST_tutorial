@@ -13,33 +13,33 @@ class Args:
 
     #: The name of the dataset, used to save the log file
     dataname : str 
-    #: The GPU ID, set to zero for single-GPU nodes (default: 0)
+    #: The GPU ID, set to zero for single-GPU nodes
     gpu : int = 0 
 
-    #: The number of epochs for training (default: 1000)
+    #: The number of epochs for training
     epochs : int = 1000
 
-    #: The learning rate (default: 1e-3)
+    #: The learning rate
     lr1 : float = 1e-3 
-    #: The weight decay (default: 0)
+    #: The weight decay
     wd1 : float = 0.0 
-    #: The lambda in the loss function, refer to online methods (default: 1e-3)
+    #: The lambda in the loss function, refer to online methods
     lambd : float = 1e-3 
 
-    #: The number of GCNII layers - more layers mean a deeper model, larger reception field, at the cost of VRAM usage and computation time (default: 9)
+    #: The number of GCNII layers - more layers mean a deeper model, larger reception field, at the cost of VRAM usage and computation time
     n_layers : int = 9 
 
-    #: The edge dropout rate in CCA-SSG (default: 0.2)
+    #: The edge dropout rate in CCA-SSG
     der : float = 0.2 
-    #: The feature dropout rate in CCA-SSG (default: 0.2)
+    #: The feature dropout rate in CCA-SSG
     dfr : float = 0.2 
 
     #: Set to 'cuda:{GPU_ID}' if GPU is available and gpu != -1, otherwise set to 'cpu'
     device : str = field(init=False) 
 
-    #: The encoder dimension, ignored if `use_encoder` set to False (default: 256)
+    #: The encoder dimension, ignored if `use_encoder` set to False
     encoder_dim : int = 256 
-    #: Whether or not to use an encoder (default: False)
+    #: Whether or not to use an encoder
     use_encoder : bool = False 
 
     def __post_init__(self):
