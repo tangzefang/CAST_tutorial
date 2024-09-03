@@ -21,20 +21,23 @@ class reg_params:
     - **Common parameters**: dataname, bleeding, diff_step, min_qr2, mean_q, mean_r, gpu, device, ifrigid
     """
 
-
-    ###: PRE-LOCATION PARAMETERS
+    #: -----------------------
+    #: PRE-LOCATION PARAMETERS
+    #: -----------------------
 
     #: Initial rotation angle for pre-location.
     theta_r1 : float = 0
 
-    #: The value in the `d_list` will be multiplied by the query sample to calculate the cost function in pre-location. For example, 2 indicates the two-fold increase of the coordinates.
+    #: The values in `d_list` will be multiplied by the query sample in pre-location. For example, 2 indicates the two-fold increase of all coordinates.
     d_list : list[float] = field(default_factory=list) 
 
     #: The mirror transformation for the pre-location. The elements of d_list will be multiplied by the elements of mirror_t
     mirror_t : list[float] = None
 
 
-    ###: AFFINE PARAMETERS 
+    #: -----------------
+    #: AFFINE PARAMETERS 
+    #: -----------------
 
 
 
@@ -73,8 +76,9 @@ class reg_params:
     """
 
 
-
-    ### BSPLINE PARAMETERS 
+    #: ------------------
+    #: BSPLINE PARAMETERS 
+    #: ------------------
 
 
     #: A list of the transformed mesh grids for each round of FFD.
@@ -109,7 +113,9 @@ class reg_params:
 
 
 
-    ### COMMON PARAMETERS
+    #: -----------------
+    #: COMMON PARAMETERS
+    #: -----------------
 
 
     #: Name of the dataset
@@ -157,7 +163,7 @@ def get_range(sp_coords):
 
 def prelocate(coords_q,coords_r,cov_anchor_it,bleeding,output_path,d_list=[1,2,3],prefix = 'test',ifplot = True,index_list = None,translation_params = None,mirror_t = None):
     """
-    Pre-location step of the registration process.
+    Performs the pre-location step of the registration process.
     
     Parameters
     ----------
@@ -234,7 +240,7 @@ def prelocate(coords_q,coords_r,cov_anchor_it,bleeding,output_path,d_list=[1,2,3
 
 def Affine_GD(coords_query_it_raw,coords_ref_it,cov_anchor_it,output_path,bleeding=500, dist_penalty = 0,diff_step = 50,alpha_basis = np.reshape(np.array([0,0,1/5,2,2]),[5,1]),iterations = 50,prefix='test',attention_params = [None,3,1,0],scale_t = 1,coords_log = False,index_list = None, mid_visual = False,early_stop_thres = 1, ifrigid = False):
     """
-    Given the query and reference samples, calculate the optimal affine transformation using gradient descent.
+    Given the query and reference samples, calculates the optimal affine transformation using gradient descent.
 
     Parameters
     ----------
@@ -347,7 +353,7 @@ def Affine_GD(coords_query_it_raw,coords_ref_it,cov_anchor_it,output_path,bleedi
 
 def BSpline_GD(coords_q,coords_r,cov_anchor_it,iterations,output_path,bleeding, dist_penalty = 0, alpha_basis = 1000,diff_step = 50,mesh_size = 5,prefix = 'test',mesh_weight = None,attention_params = [None,3,1,0],scale_t = 1,coords_log = False, index_list = None, mid_visual = False,max_xy = None):
     """
-    Given the query and reference samples, calculate the optimal FFD transformation using gradient descent.
+    Given the query and reference samples, calculates the optimal FFD transformation using gradient descent.
 
     Parameters
     ----------
@@ -485,7 +491,7 @@ def BSpline_GD(coords_q,coords_r,cov_anchor_it,iterations,output_path,bleeding, 
 
 def J_cal(coords_q,coords_r,cov_mat,bleeding = 10, dist_penalty = 0,attention_params = [None,3,1,0]):
     """
-    Calculate the cost function  
+    Calculates the cost function based on the covariance matrix and the distance between the query and reference samples.
 
     Parameters
     ----------
@@ -550,7 +556,7 @@ def J_cal(coords_q,coords_r,cov_mat,bleeding = 10, dist_penalty = 0,attention_pa
 
 def alpha_init(alpha_basis,it,dev):
     """ 
-    Multiply alpha_basis by 5/(it/40 + 1)^0.6 (a decreasing function of it) to get the alpha for the current iteration.
+    Multiplies alpha_basis by 5/(it/40 + 1)^0.6 (a decreasing function of it) to get the alpha for the current iteration.
 
     Parameters
     ----------
@@ -569,7 +575,7 @@ def alpha_init(alpha_basis,it,dev):
 
 def dJ_dt_cal(coords_q,coords_r,diff_step,dev,cov_anchor_it,bleeding,dist_penalty,attention_params):
     """
-    Caclulate the gradient of the loss with respect to x and y for each cell in the query sample.
+    Caclulates the gradient of the loss with respect to x and y for each cell in the query sample.
 
     Parameters
     ----------
@@ -630,7 +636,7 @@ def dJ_dt_cal(coords_q,coords_r,diff_step,dev,cov_anchor_it,bleeding,dist_penalt
 
 def dJ_dtheta_cal(xi,yi,dJ_dxy_mat,theta,dev,ifrigid = False):
     """
-    Calculate the gradient of the loss with respect to the affine transformation parameters.
+    Calculates the gradient of the loss with respect to the affine transformation parameters.
 
     #dxy_da:
     #{x * cos(rad_phi), x * sin(rad_phi)}
@@ -718,7 +724,7 @@ def dJ_dtheta_cal(xi,yi,dJ_dxy_mat,theta,dev,ifrigid = False):
 
 def theta_renew(theta,dJ_dtheta,alpha,ifrigid = False):
     """
-    Update theta based on the gradient dJ_dtheta and the learning rate alpha.
+    Updates theta based on the gradient dJ_dtheta and the learning rate alpha.
     
     Parameters
     ----------
@@ -748,7 +754,7 @@ def theta_renew(theta,dJ_dtheta,alpha,ifrigid = False):
 
 def affine_trans_t(theta,coords_t):
     """
-    Apply the affine transformation (defined by theta) to the coordinates.
+    Applies the affine transformation (defined by theta) to the coordinates.
 
     Parameters
     ----------
@@ -777,7 +783,7 @@ def affine_trans_t(theta,coords_t):
 
 def torch_Bspline(uv, kl):
     """
-    Calculate the B-spline basis functions for the given uv and kl.
+    Calculates the B-spline basis functions for the given uv and kl.
     
     Parameters
     ----------
@@ -801,7 +807,7 @@ def torch_Bspline(uv, kl):
 
 def BSpline_GD_preparation(max_xy,mesh_size,dev,mesh_weight):
     """
-    Initialize the mesh grid, mesh weight, B-spline basis functions, and the gradient of the FFD transformation.
+    Initializes the mesh grid, mesh weight, B-spline basis functions, and the gradient of the FFD transformation.
 
     Parameters
     ----------
@@ -840,7 +846,7 @@ def BSpline_GD_preparation(max_xy,mesh_size,dev,mesh_weight):
 
 def BSpline_GD_uv_ij_calculate(coords_query_it,delta,dev):
     """
-    Get the uv and ij coordinates for each query cell.
+    Gets the uv and ij coordinates for each query cell.
 
     Parameters
     ----------
@@ -865,7 +871,7 @@ def BSpline_GD_uv_ij_calculate(coords_query_it,delta,dev):
 
 def B_matrix(uv_t, kls_t):
     """
-    Calculate the result of the B-spline basis functions for the given uv and kl.
+    Calculates the result of the B-spline basis functions for the given uv and kl.
 
     Parameters
     ----------
@@ -888,7 +894,7 @@ def B_matrix(uv_t, kls_t):
 
 def get_dxy_ffd(ij,result_B_t,mesh,dJ_dxy_mat,mesh_weight,alpha_basis):
     """
-    Calculate the gradient of the FFD transformation with respect to x and y for each point in the mesh grid.
+    Calculates the gradient of the FFD transformation with respect to x and y for each point in the mesh grid.
     
     Parameters
     ----------
@@ -933,7 +939,7 @@ def get_dxy_ffd(ij,result_B_t,mesh,dJ_dxy_mat,mesh_weight,alpha_basis):
 
 def BSpline_renew_coords(uv_t,kls_t,ij_t,mesh_trans):
     """
-    Update the coordinates of the query sample based on the FFD transformation.
+    Updates the coordinates of the query sample based on the FFD transformation.
 
     Parameters
     ----------
@@ -962,7 +968,7 @@ def BSpline_renew_coords(uv_t,kls_t,ij_t,mesh_trans):
 
 def reg_total_t(coords_q,coords_r,params_dist):
     """
-    Apply the affine and FFD transformation described in params_dist to the query sample.
+    Applies the affine and FFD transformation described in params_dist to the query sample.
     
     Parameters
     ----------
@@ -1011,7 +1017,7 @@ def reg_total_t(coords_q,coords_r,params_dist):
 
 def FFD_Bspline_apply_t(coords_q,params_dist,round_t = 0):
     """
-    Apply one round of the FFD transformation to the query sample.
+    Applies one round of the FFD transformation to the query sample.
 
     Parameters
     ----------
@@ -1061,7 +1067,7 @@ def FFD_Bspline_apply_t(coords_q,params_dist,round_t = 0):
 
 def rescale_coords(coords_raw,graph_list,rescale = False):
     """
-    Rescale the coordinates to a max of 22340.
+    Rescales the coordinates to a max of 22340.
 
     Parameters
     ----------
@@ -1094,7 +1100,7 @@ def rescale_coords(coords_raw,graph_list,rescale = False):
 
 def mesh_plot(mesh_t,coords_q_t,mesh_trans_t = None):
     """
-    Plot the mesh and the query sample.
+    Plots the mesh and the query sample.
 
     Parameters
     ----------
@@ -1122,7 +1128,7 @@ def mesh_plot(mesh_t,coords_q_t,mesh_trans_t = None):
 
 def plot_mid(coords_q,coords_r,output_path='',filename = None,title_t = ['ref','query'],s_t = 8,scale_bar_t = None):
     """
-    Plot the coordinates of two samples in the same plot.
+    Plots the coordinates of two samples in the same plot.
 
     Parameters
     ----------
@@ -1159,7 +1165,7 @@ def plot_mid(coords_q,coords_r,output_path='',filename = None,title_t = ['ref','
 
 def corr_heat(coords_q,coords_r,corr,output_path,title_t = ['Corr in ref','Anchor in query'],filename=None,scale_bar_t = None):
     """
-    Plot 20 random points in the query sample and their correlated points in the reference sample.
+    Plots 20 random points in the query sample and their correlated points in the reference sample.
 
     Parameters
     ----------
@@ -1222,7 +1228,7 @@ def corr_heat(coords_q,coords_r,corr,output_path,title_t = ['Corr in ref','Ancho
 
 def prelocate_loss_plot(J_t,output_path,prefix = 'test'):
     """ 
-    Plot the loss during prelocation - the x-axis is the iteration number and the y-axis is the loss value.
+    Plots the loss during prelocation - the x-axis is the iteration number and the y-axis is the loss value.
     
     Parameters 
     ----------
@@ -1241,7 +1247,7 @@ def prelocate_loss_plot(J_t,output_path,prefix = 'test'):
 
 def register_result(coords_q,coords_r,cov_anchor_t,bleeding,embed_stack,output_path,k=8,prefix='test',scale_t = 1,index_list = None):
     """
-    Plot and save three figures for the registration results.
+    Plots and saves three figures for the registration results.
     1: The query and reference coordinates on the same axes.
     2: The query and reference coordinates colored by the cell type.
     3: The query coordinates colored by the similarity score to the reference sample.
@@ -1336,7 +1342,7 @@ def register_result(coords_q,coords_r,cov_anchor_t,bleeding,embed_stack,output_p
 
 def affine_reg_params(it_theta,similarity_score,iterations,output_path,prefix='test'):
     """
-    Plot the affine transformation parameters during the registration process.
+    Plots the affine transformation parameters during the registration process.
 
     Parameters
     ----------
@@ -1368,7 +1374,7 @@ def affine_reg_params(it_theta,similarity_score,iterations,output_path,prefix='t
 
 def CAST_STACK_rough(coords_raw_list, ifsquare=True, if_max_xy=True, percentile = None):
     '''
-    Roughly scale the coordinates to a square or to the max value of the `max_range_x` and `max_range_y`, respectively (if ifsquare is False), or the max value of [max_range_x,max_range_y] (if ifsquare is True).
+    Roughly scales the coordinates to a square or to the max value of the `max_range_x` and `max_range_y`, respectively (if ifsquare is False), or the max value of [max_range_x,max_range_y] (if ifsquare is True).
 
     Parameters
     ----------
@@ -1416,7 +1422,7 @@ def CAST_STACK_rough(coords_raw_list, ifsquare=True, if_max_xy=True, percentile 
 #################### Calculation ####################
 def coords_minus_mean(coord_t):
     """
-    Subtract the mean of the coordinates from the coordinates.
+    Subtracts the mean of the coordinates from the coordinates.
 
     Parameters
     ----------
@@ -1432,7 +1438,7 @@ def coords_minus_mean(coord_t):
 
 def coords_minus_min(coord_t):
     """
-    Subtract the min of the coordinates from the coordinates.
+    Subtracts the min of the coordinates from the coordinates.
 
     Parameters
     ----------
@@ -1448,7 +1454,7 @@ def coords_minus_min(coord_t):
 
 def max_minus_value(corr):
     """
-    Subtract the correlation matrix from its maximum value (to invert the correlation matrix).
+    Subtracts the correlation matrix from its maximum value (to invert the correlation matrix).
 
     Parameters 
     ----------
@@ -1480,7 +1486,7 @@ def coords_minus_min_t(coord_t):
 
 def max_minus_value_t(corr):
     """
-    Subtract the correlation matrix from its maximum value (to invert the correlation matrix).
+    Subtracts the correlation matrix from its maximum value (to invert the correlation matrix).
 
     Parameters
     ----------
@@ -1496,7 +1502,7 @@ def max_minus_value_t(corr):
 
 def corr_dist(query_np, ref_np, nan_as = 'min'):
     """
-    Calculate the correlation distance between two samples.
+    Calculates the correlation distance between two samples.
     
     Parameters
     ----------
@@ -1525,7 +1531,7 @@ def corr_dist(query_np, ref_np, nan_as = 'min'):
 
 def region_detect(embed_dict_t,coords0,k = 20):
     """
-    Detect and plot the regions in the query sample based on the embedding.
+    Detects and plots the regions in the query sample based on the embedding.
     
     Parameters
     ----------

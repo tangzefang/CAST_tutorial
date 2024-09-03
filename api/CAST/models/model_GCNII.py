@@ -34,7 +34,7 @@ class Args:
     #: The feature dropout rate in CCA-SSG
     dfr : float = 0.2 
 
-    #: Set to 'cuda:{GPU_ID}' if GPU is available and gpu != -1, otherwise set to 'cpu'
+    #: Set to "cuda:{GPU_ID}" if GPU is available and gpu != -1, otherwise set to "cpu"
     device : str = field(init=False) 
 
     #: The encoder dimension, ignored if `use_encoder` set to False

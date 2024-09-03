@@ -10,7 +10,7 @@ from visualize import link_plot
 
 def coords2adjacentmat(coords,output_mode = 'adjacent',strategy_t = 'convex'):
     """
-    Given a spatial data matrix, generate the delaunay graph in the specified format.
+    Given a spatial data matrix, generates the delaunay graph in the specified format.
 
     Parameters
     ----------
@@ -217,7 +217,7 @@ def Harmony_integration(sdata_inte, scaled_layer, use_highly_variable_t, batch_k
     source_sample_ctype_col, output_path, n_components = 50, ifplot = True, ifcombat = False):
     """
     Performs Harmony integration on the data.
-    In addition, the function will run PCA and construct a neighborhood graph and UMAP with the integrated data.
+    In addition, runs PCA and constructs a neighborhood graph and UMAP with the integrated data.
 
     Parameters
     ----------
@@ -365,7 +365,7 @@ def sub_node_sum(coords_t,exp_t,nodenum=1000,vis = True,seed_t = 2):
 
 def nearest_neighbors_idx(coord1,coord2,mode_t = 'knn'): ### coord1 is the reference, coord2 is the target
     """
-    Find each coord2 point's the nearest neighbor in coord1.
+    Finds each coord2 point's the nearest neighbor in coord1.
     
     Parameters 
     ----------
@@ -405,7 +405,7 @@ def nearest_neighbors_idx(coord1,coord2,mode_t = 'knn'): ### coord1 is the refer
     
 def non_zero_center_scale(sdata_t_X):
     """
-    Scale the data by dividing each column by its standard deviation without centering (i.e. without subtracting the mean).
+    Scales the data by dividing each column by its standard deviation without centering (i.e. without subtracting the mean).
 
     Parameters 
     ----------
@@ -459,7 +459,7 @@ def sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000, if_non_zer
 
 def preprocess_fast(sdata1, mode = 'customized',target_sum=1e4,base = 2,zero_center = True,regressout = False):
     """
-    Convert the data to a csr matrix and preprocess it in multiple ways: total counts, log transform, scale, and regress out (if regressout).
+    Converts the data to a csr matrix and preprocess it in multiple ways: total counts, log transform, scale, and regress out (if regressout).
 
     Parameters
     ----------
@@ -664,7 +664,7 @@ def get_neighborhood_rad(coords_centroids, coords_candidate, radius_px, dist=Non
 
 def delta_cell_cal(coords_tgt,coords_ref,ctype_tgt,ctype_ref,radius_px):
     """
-    Calculate the delta cell counts between target cells and reference cells based on their coordinates and cell types.
+    Calculates the delta cell counts between target cells and reference cells based on their coordinates and cell types.
 
     Parameters
     ----------
@@ -728,7 +728,7 @@ def delta_cell_cal(coords_tgt,coords_ref,ctype_tgt,ctype_ref,radius_px):
 
 def delta_exp_cal(coords_tgt,coords_ref,exp_tgt,exp_ref,radius_px,valid_tgt_idx=None,valid_ref_idx=None):
     """
-    Calculate the delta gene expression between target cells and reference cells based on their coordinates and gene expression.
+    Calculates the delta gene expression between target cells and reference cells based on their coordinates and gene expression.
 
     Parameters
     ----------

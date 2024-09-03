@@ -6,7 +6,7 @@ import os
 
 def kmeans_plot_multiple(embed_dict_t,graph_list,coords,taskname_t,output_path_t,k=20,dot_size = 10,scale_bar_t = None,minibatch = True,plot_strategy = 'sep',axis_off = False):
     """
-    Plot and return the KMeans clustering results for multiple samples.
+    Plots and returns the KMeans clustering results for multiple samples.
 
     Parameters
     ----------
@@ -110,7 +110,7 @@ def kmeans_plot_multiple(embed_dict_t,graph_list,coords,taskname_t,output_path_t
 
 def add_scale_bar(length_t,label_t):
     """
-    Add scale bar to the current matplotlib plot
+    Adds a scale bar to the current matplotlib plot
     
     Parameters
     ----------
@@ -130,7 +130,7 @@ def add_scale_bar(length_t,label_t):
 
 def plot_mid_v2(coords_q,coords_r = None,output_path='',filename = None,title_t = ['ref','query'],s_t = 8,scale_bar_t = None):
     """
-    Plot the coordinates of one or two samples in the same plot.
+    Plots the coordinates of one or two samples in the same plot.
 
     Parameters
     ----------
@@ -174,7 +174,7 @@ def plot_mid_v2(coords_q,coords_r = None,output_path='',filename = None,title_t 
 
 def plot_mid(coords_q,coords_r,output_path='',filename = None,title_t = ['ref','query'],s_t = 8,scale_bar_t = None,axis_off = False):
     """
-    Plot the coordinates of two samples in the same plot.
+    Plots the coordinates of two samples in the same plot.
 
     Parameters
     ----------
@@ -224,7 +224,7 @@ def plot_mid(coords_q,coords_r,output_path='',filename = None,title_t = ['ref','
 
 def link_plot(all_cosine_knn_inds_t,coords_q,coords_r,k,figsize_t = [15,20],scale_bar_t = None):
     """
-    Plot the links between the query cells and their k nearest neighbors in the reference cells.
+    Plots the links between the query cells and their k nearest neighbors in the reference cells.
 
     Parameters
     ----------

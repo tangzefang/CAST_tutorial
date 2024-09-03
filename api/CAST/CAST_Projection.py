@@ -25,7 +25,7 @@ def space_project(sdata_inte, idx_source, idx_target, raw_layer,
     working_memory_t = 1000
     ):
     """
-    Project the source cells to the target cells based on the k-nearest neighbors in the pca space and phsyical distance.
+    Projects the source cells to the target cells based on the k-nearest neighbors in the pca space and phsyical distance.
 
     Parameters
     ----------
@@ -174,7 +174,7 @@ def space_project(sdata_inte, idx_source, idx_target, raw_layer,
 
 def average_dist(coords,quantile_t = 0.99,working_memory_t = 1000,strategy_t = 'convex'):
     """
-    Find the average distance between the cells after filtering for distances in the top quantile_t.
+    Finds the average distance between the cells after filtering for distances in the top quantile_t.
     
     Parameters
     ----------
@@ -236,7 +236,7 @@ def average_dist(coords,quantile_t = 0.99,working_memory_t = 1000,strategy_t = '
 
 def group_shift(feat_target, feat_source, coords_target_t, coords_source_t, working_memory_t = 1000, pencentile_t = 0.8, metric_t = 'cosine'):
     """
-    Calculate the median shift between the target and source cells.
+    Calculates the median shift between the target and source cells.
 
     Parameters
     ----------
@@ -282,7 +282,7 @@ def group_shift(feat_target, feat_source, coords_target_t, coords_source_t, work
 
 def physical_dist_priority_project(feat_target, feat_source, coords_target, coords_source, source_feat = None, k2 = 1, k_extend = 20, pdist_thres = 200, working_memory_t = 1000, metric_t = 'cosine'):
     """
-    Get the indicies, weights, and distances of the k-nearest neighbors for each cell in the target space.
+    Gets the indicies, weights, and distances of the k-nearest neighbors for each cell in the target space.
 
     Parameters
     ----------
@@ -407,7 +407,7 @@ def physical_dist_priority_project(feat_target, feat_source, coords_target, coor
 
 def sparse_mask(idw_t, ind : np.ndarray, n_cols : int, dtype=np.float64): # ind is indices with shape (num data points, indices), in the form of output of numpy.argpartition function
     """
-    Create a CSR matrix from the given non-zero values and their corresponding indices.
+    Creates a CSR matrix from the given non-zero values and their corresponding indices.
 
     Parameters
     ----------
@@ -469,7 +469,7 @@ def cosine_IDW(cosine_dist_t,k2=5,eps = 1e-6,need_filter = True,ifavg = False):
 
 def IDW(df_value,eps = 1e-6):
     """
-    Calculate the normalized, reciprocal weights for each element in the dataset.
+    Calculates the normalized, reciprocal weights for each element in the dataset.
 
     Parameters
     ----------
@@ -493,7 +493,7 @@ def evaluation_project(physical_dist, project_ind, coords_target, coords_source,
     umap_target = None, umap_source = None, source_sample = None, target_sample = None,
     cdists = None, batch_t = '', exclude_group = 'Other', color_dict = None, umap_examples = False):
     """
-    Generate and save evaluation plots for the projection results - physical distance and cosine distance histograms, confusion matrix, link plot, and UMAP examples.
+    Generates and saves evaluation plots for the projection results - physical distance and cosine distance histograms, confusion matrix, link plot, and UMAP examples.
 
     Parameters
     ----------
@@ -586,7 +586,7 @@ def evaluation_project(physical_dist, project_ind, coords_target, coords_source,
 
 def cdist_hist(data_t,range_t = None,step = None):
     """
-    Generate a histogram of the given data.
+    Generates a histogram of the given data.
 
     Parameters
     ----------
@@ -616,7 +616,7 @@ def cdist_hist(data_t,range_t = None,step = None):
 
 def confusion_mat_plot(y_true_t, y_pred_t, filter_thres = None, withlabel = True, fig_x = 60, fig_y = 20):
     """
-    Generate a confusion matrix plot.
+    Generates a confusion matrix plot.
     
     Parameters
     ----------
@@ -684,7 +684,7 @@ def confusion_mat_plot(y_true_t, y_pred_t, filter_thres = None, withlabel = True
 
 def cdist_check(cdist_t,cdist_idx,umap_coords0,umap_coords1, labels_t = ['query','ref'],random_seed_t = 2,figsize_t = [40,32],output_path_t = None):
     """
-    Generate UMAP examples plots for a random 20 points, highlighting the target points and their nearest neighbor in the reference sample.
+    Generates UMAP examples plots for a random 20 points, highlighting the target points and their nearest neighbor in the reference sample.
 
     Parameters
     ----------
@@ -738,7 +738,7 @@ def cdist_check(cdist_t,cdist_idx,umap_coords0,umap_coords1, labels_t = ['query'
 
 def link_plot_3d(assign_mat, coords_target, coords_source, k, figsize_t = [15,20], sample_n=1000, link_color_mask=None, color_target="#9295CA", color_source='#E66665', color_true = "#999999", color_false = "#999999", remove_background = True):
     """
-    Generate a 3D link plot for the projection results.
+    Generates a 3D link plot for the projection results.
 
     Parameters
     ----------
