@@ -158,9 +158,9 @@ def extract_coords_exp(sdata, batch_key = 'batch', cols = 'spatial', count_layer
     
     Returns
     -------
-    coords_raw : dict
-        The spatial data matrix with the coordinate position for each cell, indexed by sample name.
-    exps : dict
+    coords_raw : dict[str,np.ndarray]
+        The spatial data matrix with the coordinate position of each cell, indexed by sample name.
+    exps : dict[str,np.ndarray]
         The gene expression data for each coordinate in coords_raw, indexed by sample name.
     """
 
@@ -216,8 +216,7 @@ def Harmony_integration(sdata_inte, scaled_layer, use_highly_variable_t, batch_k
     umap_n_neighbors, umap_n_pcs, min_dist, spread_t,
     source_sample_ctype_col, output_path, n_components = 50, ifplot = True, ifcombat = False):
     """
-    Performs Harmony integration on the data.
-    In addition, runs PCA and constructs a neighborhood graph and UMAP with the integrated data.
+    Performs Harmony integration on the data, runs PCA and constructs a neighborhood graph and UMAP.
 
     Parameters
     ----------
@@ -226,9 +225,9 @@ def Harmony_integration(sdata_inte, scaled_layer, use_highly_variable_t, batch_k
     scaled_layer : str
         The name of the layer in sdata.layers to use for the scaled data.
     use_highly_variable_t : bool
-        Whether or not to use highly variable genes for the PCA.
+        Whether or not to use highly variable genes for PCA. If true, the algorithm will use highly variable genes only, stored in .var['highly_variable']. 
     batch_key : str
-        The column name of the samples in sdata.obs
+        The column name of the samples in sdata.obs.
     umap_n_neighbors : int
         The number of neighbors to use for the UMAP.
     umap_n_pcs : int
@@ -244,9 +243,9 @@ def Harmony_integration(sdata_inte, scaled_layer, use_highly_variable_t, batch_k
     n_components : int (default: 50)
         The number of components to use for the Harmony integration.
     ifplot : bool (default: True)
-        Whether or not to plot the UMAP.
+        Whether or not to plot the UMAP results.
     ifcombat : bool (default: False)
-        Whether or not to use ComBat to correct for batch effects.
+        Whether or not to initially run ComBat to correct for batch effects.
     
     Returns
     -------
@@ -287,7 +286,7 @@ def random_sample(coords_t, nodenum, seed_t = 2):
         The random indices will be sampled from the length of the first axis.
     nodenum : int
         The number of random indicies to return.
-    seed_t : int | None, optional (default: '2')
+    seed_t : int | None, optional (default: 2)
         The seed for the random package.
     
     Returns
@@ -302,28 +301,27 @@ def random_sample(coords_t, nodenum, seed_t = 2):
 
 def sub_node_sum(coords_t,exp_t,nodenum=1000,vis = True,seed_t = 2):
     """
-    Randomly selects nodenum nodes from coords_t and returns their indices and subnode expression matrix for the nearest neighbor of each chosen point.
+    Randomly selects nodenum nodes from coords_t and returns the subnode expression matrix for the nearest neighbor of each chosen point.
 
     Parameters
     ----------
-    coords_t : ndarray
-        The spatial data matrix with the coordinate position for each cell.
-    exp_t : ndarray
-        Gene expression data for each coordinate in coords_t.
-    nodenum : int, optional (default: '1000')
-        The number of nodes to return. 
-        If this is larger than the total number of nodes, the original data will be returned.
-    vis : bool, optional (default: 'True')
-        Whether or not to visualize the subnodes and their neighbros before returning them. 
-    seed_t : int, optional (default: '2')
+    coords_t : np.ndarray
+        The spatial data matrix with the coordinate of each cell.
+    exp_t : np.ndarray
+        The gene expression data for each coordinate in coords_t.
+    nodenum : int, optional (default: 1000)
+        The number of nodes to return. If this is larger than the total number of nodes, the original data will be returned.
+    vis : bool, optional (default: True)
+        Whether or not to visualize the subnodes and their neighbors before returning them. 
+    seed_t : int, optional (default: 2)
         The seed for the random package (for reproducibility). 
     
     Returns
     -------
     exp_t_sub : ndarray
-        The subnode expression matrix for the nearest neighbor of each chosen point.
+        The subnode expression matrix of the nearest neighbor of each chosen point.
     sub_node_idx : ndarray
-        1D nodenum-length sorted array of random indicies from coords_t.
+        The nodenum-length sorted array of indicies chosen from coords_t.
     """
 
     from scipy.sparse import csr_matrix as csr
@@ -374,12 +372,12 @@ def nearest_neighbors_idx(coord1,coord2,mode_t = 'knn'): ### coord1 is the refer
     coord2 : array-like
         The query array of coordinates.
     mode_t : str, optional (default: 'knn')
-        Whether or not to use a KNN classifier.
+        Whether or not to use a KNN classifier to find the nearest neighbor. If not 'knn', the function will use pairwise distances instead.
 
     Returns
     -------
     close_idx : ndarray
-        For each point in coord2, the index of its nearest neighbor in coord1.
+        The index of each point in coord2's nearest neighbor in coord1. 
     """
 
     if mode_t == 'knn':
@@ -411,6 +409,11 @@ def non_zero_center_scale(sdata_t_X):
     ----------
     sdata_t_X : ndarray
         The data matrix to scale.
+
+    Returns
+    -------
+    sdata_t_X : ndarray
+        The scaled data matrix.
     """
 
     # Calculate the column-wise standard deviation without centering (i.e. wihtoit subtracting the mean)
@@ -421,28 +424,28 @@ def non_zero_center_scale(sdata_t_X):
 
 def sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000, if_non_zero_center_scale = True):
     """
-    Extracts nodenum_t random nodes in sample_list and returns their coordinates and expression matrix for each sample.
+    For each sample in sample_list, extracts nodenum_t random nodes and returns their coordinates and expression matrix.
 
     Parameters
     ----------
-    sample_list : list
+    sample_list : list[str]
         The list of samples to extract sub-data from.
-    coords_raw : dict
-        The raw spatial data matrix with the coordinate position for each cell, indexed by sample.
-    exps : dict
+    coords_raw : dict[str,np.ndarray]
+        The spatial data matrix with the cell coordinate positions, indexed by sample.
+    exps : dict[str,np.ndarray]
         The gene expression data for each coordinate in coords_raw.
-    nodenum_t : int, optional (default: '20000')
+    nodenum_t : int, optional (default: 20000)
         The number of nodes to return.
-    if_non_zero_center_scale : bool, optional (default: 'True')
-        Whether or not to scale the expression matrix by dividing each column by its standard deviation without centering (i.e. without subtracting the mean).
+    if_non_zero_center_scale : bool, optional (default: True)
+        Whether or not to scale the expression matrix by dividing each column by its standard deviation without centering.
     
     Returns
     -------
-    coords_sub : dict
+    coords_sub : dict[str,np.ndarray]
         The sub-node coordinates for each sample in sample_list
-    exp_sub : dict
+    exp_sub : dict[str,np.ndarray]
         The sub-node expression matrix for each sample in sample_list 
-    sub_node_idxs : dict
+    sub_node_idxs : dict[str,np.ndarray]
         The sub-node indices for each sample in sample_list
     """
 
@@ -459,29 +462,29 @@ def sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000, if_non_zer
 
 def preprocess_fast(sdata1, mode = 'customized',target_sum=1e4,base = 2,zero_center = True,regressout = False):
     """
-    Converts the data to a csr matrix and preprocess it in multiple ways: total counts, log transform, scale, and regress out (if regressout).
+    Converts the data to a csr matrix and preprocesses it in multiple ways: total counts, log transform, scale, and regress out (if regressout is True).
 
     Parameters
     ----------
     sdata1 : AnnData
         Annotated data matrix.
     mode : 'customized' | 'default' , optional (default: 'customized')
-        The mode of the preprocessing.
-        If 'default', the function will use the default preprocessing settings.
-        If 'customized', the user can specify the target sum, base, zero center, and regressout settings.
-    target_sum : float, optional (default: '1e4')
+        The mode of preprocessing.
+        If 'default', the function will use the default preprocessing parameters, regardless of if other parameters are passed in.
+        If 'customized', the user can specify the target sum, base, zero center, and regressout parameters.
+    target_sum : float, optional (default: 1e4)
         The target sum for the normalization (if 'mode' is 'customized').
-    base : int, optional (default: '2')
+    base : int, optional (default: 2)
         The base for the log transformation (if 'mode' is 'customized').
-    zero_center : bool, optional (default: 'True')
+    zero_center : bool, optional (default: True)
         Whether or not to zero center the data.
-    regressout : bool, optional (default: 'False')
-        Whether or not to regress out the total counts.
+    regressout : bool, optional (default: False)
+        Whether or not to use scanpy.pp.regress_out on the total counts.
     
     Returns
     -------
     sdata1 : AnnData
-        The preprocessed data matrix
+        The data matrix with the preprocessing layers added in the 'layers' attribute.
     """
 
 
@@ -567,13 +570,14 @@ def cell_select(coords_t, s=0.5, c=None, output_path_t=None):
     ----------
     coords_t : ndarray
         The spatial data matrix with the coordinate position for each cell.
-    s : float, optional (default: '0.5')
+    s : float, optional (default: 0.5)
         The size of the scatter plot points.
-    c : str, optional (default: 'None')
+    c : str, optional (default: None')
         The color of the scatter plot points.
-    output_path_t : str, optional (default: 'None')
+    output_path_t : str, optional (default: None)
         The path to save the output plot.
     """
+
     import matplotlib.pyplot as plt
     from matplotlib.patches import Polygon
     from shapely.geometry import Point, Polygon as ShapelyPolygon

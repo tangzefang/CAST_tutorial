@@ -10,28 +10,28 @@ def kmeans_plot_multiple(embed_dict_t,graph_list,coords,taskname_t,output_path_t
 
     Parameters
     ----------
-    embed_dict_t : dict
-        A dictionary of the embeddings of the samples.
+    embed_dict_t : dict[str,torch.Tensor]
+        A dictionary mapping the sample names to their embeddings (such as as an output from CAST Mark).
     graph_list : list[str]
-        The list of the names of the samples.
-    coords : dict
-        A dictionary of the coordinates of the samples (str keys and array-like values).
+        A list of the sample names.
+    coords : dict[str,array-like]
+        A dictionary mapping the sample names to their coordinates.
     taskname_t : str
-        The name of the task for the output file name ({taskname_t}_trained_k{str(k)}.pdf)
+        The name of the task for the output file name. The file will be named "{taskname}_trained_k{k}.pdf" where k is the number of clusters.
     output_path_t : str
         The path to save the plot.
     k : int (default = 20)
         The number of clusters for KMeans.
     dot_size : int (default = 10)
         The size of the points in the plot.
-    scale_bar_t : list[float]
+    scale_bar_t : list[float,str], optional
         The length (in data units) and label of the scale bar for the plot. If omitted, no scale bar is added.
     minibatch : bool (default = True)
         Whether to use MiniBatchKMeans for clustering.
     plot_strategy : str (default = 'sep')
         The strategy to plot the clustering results. If 'sep', each sample is plotted in a separate subplot. Else, all samples are plotted in the same subplot.
     axis_off : bool (default = False)
-        Whether to turn off the axis in the plot.
+        Whether to turn off the axis in the plot(s).
     
     Returns
     -------
@@ -115,9 +115,9 @@ def add_scale_bar(length_t,label_t):
     Parameters
     ----------
     length_t : float
-        The length of the scale bar in data coordinates
+        The length for the scale bar in data coordinates
     label_t : str
-        The label of the scale bar
+        The label for the scale bar
     """
 
     import matplotlib.font_manager as fm
@@ -130,24 +130,24 @@ def add_scale_bar(length_t,label_t):
 
 def plot_mid_v2(coords_q,coords_r = None,output_path='',filename = None,title_t = ['ref','query'],s_t = 8,scale_bar_t = None):
     """
-    Plots the coordinates of one or two samples in the same plot.
+    Plots the coordinates of one or two samples on the same axes.
 
     Parameters
     ----------
-    coords_q : array-like (will be converted to np.array)
+    coords_q : np.array
         The coordinates of the query sample.
-    coords_r : array-like, optional (will be converted to np.array)
+    coords_r : np.array, optional
         The coordinates of the reference sample. If omitted, only the query sample is plotted.
     output_path : str
-        The path to save the plot.
-    filename : str
-        The name of the file to save the plot.
+        The path to save the plot (if filename is included).
+    filename : str, optional
+        The name of the output file. If omitted, the plot is not saved.
     title_t : list[str] (default = ['ref','query'])
-        The labels for the samples in the plot.
+        The labels for the query (and reference) samples.
     s_t : int (default = 8)
         The size of the points in the plot.
-    scale_bar_t : list[float]
-        The length (in data units) and label of the scale bar for the plot. If omitted, no scale bar is added.
+    scale_bar_t : list[float, str], optional
+        The length (in data units) and label of the plot's scale bar. If omitted, no scale bar is added.
     """
 
     plt.rcParams.update({'font.size' : 30,'axes.titlesize' : 30,'pdf.fonttype':42,'legend.markerscale' : 5})
@@ -174,24 +174,24 @@ def plot_mid_v2(coords_q,coords_r = None,output_path='',filename = None,title_t 
 
 def plot_mid(coords_q,coords_r,output_path='',filename = None,title_t = ['ref','query'],s_t = 8,scale_bar_t = None,axis_off = False):
     """
-    Plots the coordinates of two samples in the same plot.
+    Plots the coordinates of two samples on the same axes.
 
     Parameters
     ----------
-    coords_q : array-like (will be converted to np.array)
+    coords_q : np.array
         The coordinates of the query sample.
-    coords_r : array-like (will be converted to np.array)
+    coords_r : np.array
         The coordinates of the reference sample.
     output_path : str
-        The path to save the plot.
+        The path to save the plot (if filename is included).
     filename : str
-        The name of the file to save the plot.
+        The name of the output file. If omitted, the plot is not saved.
     title_t : list[str] (default = ['ref','query'])
-        The labels for the samples in the plot.
+        The labels for the query and reference samples.
     s_t : int (default = 8)
         The size of the points in the plot.
-    scale_bar_t : list[float]
-        The length (in data units) and label of the scale bar for the plot. If omitted, no scale bar is added.
+    scale_bar_t : list[float, str], optional
+        The length (in data units) and label of the plot's scale bar. If omitted, no scale bar is added.
     axis_off : bool (default = False)
         Whether to turn off the axis in the plot.
     """
@@ -224,12 +224,12 @@ def plot_mid(coords_q,coords_r,output_path='',filename = None,title_t = ['ref','
 
 def link_plot(all_cosine_knn_inds_t,coords_q,coords_r,k,figsize_t = [15,20],scale_bar_t = None):
     """
-    Plots the links between the query cells and their k nearest neighbors in the reference cells.
+    Plots links between the query cells and their k nearest neighbors in the reference sample.
 
     Parameters
     ----------
     all_cosine_knn_inds_t : np.array
-        The indices of the k nearest neighbors in the reference cells for each query cell.
+        The indices of each query cell's k nearest neighbors in the reference sample.
     coords_q : np.array
         The coordinates of the query cells.
     coords_r : np.array
@@ -238,8 +238,8 @@ def link_plot(all_cosine_knn_inds_t,coords_q,coords_r,k,figsize_t = [15,20],scal
         The number of nearest neighbors to visualize.
     figsize_t : list[float], optional (default = [15,20])
         The size of the plot.
-    scale_bar_t : list[float], optional
-        The length (in data units) and label of the scale bar for the plot. If omitted, no scale bar is added.
+    scale_bar_t : list[float,str], optional
+        The length (in data units) and label of the plot's scale bar. If omitted, no scale bar is added.
     """
     
     assign_mat = all_cosine_knn_inds_t

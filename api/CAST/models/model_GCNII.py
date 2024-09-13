@@ -26,19 +26,37 @@ class Args:
     #: The lambda in the loss function, refer to online methods
     lambd : float = 1e-3 
 
-    #: The number of GCNII layers - more layers mean a deeper model, larger reception field, at the cost of VRAM usage and computation time
+
     n_layers : int = 9 
+    """
+        The number of GCNII layers. More layers mean a deeper model, larger reception field, at the cost of VRAM usage and computation time.
+        By default, we chose the largest number of GCNII layers (n_layer = 9) as recommended by the original GCNII paper. Our experimental results on the simulation dataset and real samples S1-S8 confirm that increasing the number of layers improves the accuracy of CAST alignment, presumably due to the increased contrast and spatial resolution of learned graph embeddings in layer-shaped anatomical regions. These results confirmed that the performance gain from a deep GNN architecture is essential for high-resolution spatial alignment tasks.
+    """
 
     #: The edge dropout rate in CCA-SSG
     der : float = 0.2 
-    #: The feature dropout rate in CCA-SSG
+    """
+        The edge dropout rate in CCA-SSG.
+        This hyperparameter controls the extent of graph edge dropout for graph augmentation in the CCA-SSG self-supervised learning model. der = 1 means complete dropout, while der = 0 means no dropout. For CAST, we used default der = 0.5, the same as the default in the CCA-SSG paper. Our sensitivity experiments showed that alignment performance is optimal from 0.3 to 0.7. We recommended users to use the default der value unless necessary.
+    """
+
     dfr : float = 0.2 
+    """
+        The feature dropout rate in CCA-SSG. 
+        This hyperparameter controls the extent of feature dropout for graph augmentation in the CCA-SSG self-supervised learning model. dfr = 1 means complete dropout while dfr = 0 means no dropout. For CAST, we used a default dfr = 0.3, following the CCA-SSG paper. Our parameter sensitivity experiments showed that alignment performance is optimal from 0.1 to 0.4. We recommend users to use the default dfr value unless necessary.
+    """
 
     #: Set to "cuda:{GPU_ID}" if GPU is available and gpu != -1, otherwise set to "cpu"
     device : str = field(init=False) 
 
-    #: The encoder dimension, ignored if `use_encoder` set to False
+
     encoder_dim : int = 256 
+    """
+        The encoder dimension, ignored if `use_encoder` set to False
+        The purpose of the MLP encoder is to reduce the time and space complexity of the model, especially for datasets with large gene panels. For our test set with a gene panel of 2,766 genes, results showed that encoder dimensions 256 and 512 yielded comparable and even slightly better alignment performance than the group without the MLP enocder module. Therefore, we recommend using 256 and 512 for parameter encoder_dim for the datasets with large gene panels (larger than 1,000 genes). We recommend using “No encoder” for datasets with limited gene panels (smaller than 1,000 genes).
+    """
+
+
     #: Whether or not to use an encoder
     use_encoder : bool = False 
 

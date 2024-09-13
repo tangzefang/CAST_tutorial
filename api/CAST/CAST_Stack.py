@@ -28,7 +28,7 @@ class reg_params:
     #: Initial rotation angle for pre-location.
     theta_r1 : float = 0
 
-    #: The values in `d_list` will be multiplied by the query sample in pre-location. For example, 2 indicates the two-fold increase of all coordinates.
+    #: These values will be multiplied by the query sample to calculate the cost function. For example, if the list contains 2, the function evaluates whether a two-fold increase of the coordinates reduces loss during pre-location.
     d_list : list[float] = field(default_factory=list) 
 
     #: The mirror transformation for the pre-location. The elements of d_list will be multiplied by the elements of mirror_t
@@ -55,8 +55,10 @@ class reg_params:
     #: The coefficients for updating the affine transformation. The first two elements are the coefficients for the scaling, the third element is the coefficient for the rotation, and the last two elements are the coefficients for the translation.
     alpha_basis : list[float] = field(default_factory=list) 
 
-    #: The number of iterations for the affine transformation.
     iterations : int = 500 
+    """
+        The number of iterations for the affine transformation. We compared the results of aligning S4 to S1 using 100 and 500 iterations. The results showed that in the 100-step task, the DG region of the query sample exhibited a small shift to the one in the reference sample and the five parameters did not converge, in contrast to the 500-step task. Thus, 500 steps were necessary in this case.
+    """
 
     dist_penalty1 : float = 0 
     """
@@ -87,20 +89,29 @@ class reg_params:
     #: The region to apply the attention mechanism. The True/False index of all the cells of the query sample or None.
     attention_region : list[float] = field(default_factory=list)
 
-    # The attention mechanism to increase the penalty of the cells. Refer to `attention_params`.
     attention_params_bs : list[float] = field(default_factory=list) 
+    """
+        The attention mechanism to increase the penalty of the cells. Refer to `attention_params`.
+    """
 
     #: The weight matrix for the mesh grid. The same size of the mesh or None.
     mesh_weight : list[float] = field(default_factory=list) 
 
-    #: Number of iterations of the FFD.
     iterations_bs : list[float] = field(default_factory=list)   
+    """
+        Number of iterations of the FFD. We compared the results of aligning S4 to S1 using 50 and 400 iterations. The results showed that CA1 could be better aligned in the 400-step task than the 50-step task.
+    """
 
     #: The learning rate for the FFD transformation.
     alpha_basis_bs : list[float] = field(default_factory=list) 
 
-    #: The mesh size for the FFD.
+
     meshsize : list[float] = field(default_factory=list)  
+    """
+        The mesh size for the FFD. 
+        A smaller number of the meshgrid generally gives coarse-grained adjustment, while a higher number of the meshgrid could adjust more details. We observed that the S4 to S1 alignment task with the meshsize = 4 exhibits poor alignment performance compared to the tasks with meshsize = 8 or meshsize = 10.
+    """
+
 
     #: The maximum x and y coordinates of the image. 
     img_size_bs : list[float] = field(default_factory=list) 
@@ -178,7 +189,7 @@ def prelocate(coords_q,coords_r,cov_anchor_it,bleeding,output_path,d_list=[1,2,3
     output_path : str
         The path to save the visualization if ifplot is True.
     d_list : list[float] (default = [1,2,3])
-        These values will be multiplied by the query sample to calculate the cost function. For example, 2 indicates the two-fold increase of the coordinates.
+        These values will be multiplied by the query sample to calculate the cost function. For example, if the list contains 2, the function evaluates whether a two-fold increase of the coordinates reduces loss.
     prefix : str (default = 'test')
         The prefix of the saved plots if ifplot is True.
     ifplot : bool (default = True)
