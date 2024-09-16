@@ -46,7 +46,7 @@ class Args:
         This hyperparameter controls the extent of feature dropout for graph augmentation in the CCA-SSG self-supervised learning model. dfr = 1 means complete dropout while dfr = 0 means no dropout. For CAST, we used a default dfr = 0.3, following the CCA-SSG paper. Our parameter sensitivity experiments showed that alignment performance is optimal from 0.1 to 0.4. We recommend users to use the default dfr value unless necessary.
     """
 
-    #: Set to "cuda:{GPU_ID}" if GPU is available and gpu != -1, otherwise set to "cpu"
+    #: Set to cuda:{GPU_ID} if GPU is available and gpu is not -1, otherwise set to cpu
     device : str = field(init=False) 
 
 
