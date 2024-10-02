@@ -9,12 +9,6 @@ CAST module
    :undoc-members:
    :show-inheritance:
 
-   .. .. autosummary:: 
-   ..    :toctree: _autosumary 
-
-   ..    CAST_Mark
-   ..    CAST_Stack
-   ..    CAST_Projection
 
 Subpackages
 -----------

@@ -27,8 +27,12 @@ def train_seq(graphs, args, dump_epoch_list, out_prefix, model):
     
     Returns
     -------
-    Tuple(Dict[str, torch.Tensor], List[float], model_GCNII.CCA_SSG)
-        A dictionary containing the graph embeddings for each sample, a list of the loss value per epoch, and the trained model.
+    Dict[str, torch.Tensor]
+        The graph embeddings for each sample.
+    List[float]
+        The loss value per epoch.
+    model_GCNII.CCA_SSG
+        The trained GNN model.
     """
     model = model.to(args.device)
 
@@ -117,21 +121,21 @@ def delaunay_dgl(sample_name, df, output_path,if_plot=True,strategy_t = 'convex'
     ----------
     sample_name : str
         The name of the sample.
-    df : array-like (castable to numpy array)
+    df : array-like (castable to np.array)
         An array containing the coordinates of the points.
     output_path : str
         The path to save the plot (if if_plot is True).
     if_plot : bool, optional (default: True)
         Whether to display and save the graph.
     strategy_t : 'convex' | 'delaunay', optional (default: 'convex')
-        The strategy to construct the delaunay graph
-        Convex will use Veronoi polygons clipped to the convex hull of the points and their rook spatial weights matrix (with libpysal).
+        The strategy to construct the delaunay graph. \n
+        Convex will use Veronoi polygons clipped to the convex hull of the points and their rook spatial weights matrix (with libpysal).\n
         Delaunay will use the Delaunay triangulation (with sciipy).
     
     Returns
     -------
     dgl.DGLGraph
-        The delaunay graph in the DGL format
+        The delaunay graph in the DGL format.
     """
 
     coords = np.column_stack((np.array(df)[:,0],np.array(df)[:,1]))

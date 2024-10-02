@@ -14,23 +14,22 @@ def coords2adjacentmat(coords,output_mode = 'adjacent',strategy_t = 'convex'):
 
     Parameters
     ----------
-    coords : ndarray
+    coords : np.ndarray
         The spatial data matrix with the coordinate position for each cell.
     output_mode : 'adjacent' | 'raw' | 'adjacent_sparse', optional (default: 'adjacent')
-        The output format of the delaunay graph.
-        If 'adjacent', the function will return the adjacent matrix.
-        If 'raw', the function will return the raw delaunay graph.
+        The output format of the delaunay graph.\n
+        If 'adjacent', the function will return the adjacent matrix.\n
+        If 'raw', the function will return the raw delaunay graph.\n
         If 'adjacent_sparse', the function will return the adjacent matrix in sparse format.
     strategy_t : 'convex' | 'delaunay', optional (default: 'convex')
-        The strategy to use for generating the delaunay graph.
-        Convex will use Veronoi polygons clipped to the convex hull of the points and their rook spatial weights matrix (with libpysal).
+        The strategy to use for generating the delaunay graph.\n
+        Convex will use Veronoi polygons clipped to the convex hull of the points and their rook spatial weights matrix (with libpysal).\n
         Delaunay will use the Delaunay triangulation (with sciipy).
     
     Returns
     -------
     delaunay_graph : ndarray | nx.Graph | scipy.sparse.csr_matrix
         The delaunay graph in the specified format.
-
     """
 
 
@@ -71,19 +70,19 @@ def coords2adjacentmat(coords,output_mode = 'adjacent',strategy_t = 'convex'):
 
 def hv_cutoff(max_col,threshold_cell_num=2000):
     """
-    Returns the highest integer threshold such that the at least threshold_cell_num cells have a max_col value greater than the threshold.
+    Returns the highest integer threshold such that the at least `threshold_cell_num` cells have a `max_col` value greater than the threshold.
 
     Parameters
     ----------
     max_col : np.ndarray
         The data to threshold.
     threshold_cell_num : int, optional (default: 2000)
-        The threshold such that at least threshold_cell_num cells have a max_col value greater than the threshold.
+        The threshold value.
 
     Returns
     -------
     thres_t : int
-        The highest integer threshold such that the at least threshold_cell_num cells have a max_col value greater than the threshold. 
+        The highest integer threshold such that the at least `threshold_cell_num cells` have a `max_col` value greater than the threshold. 
     """
     for thres_t in range(0,int(np.max(max_col))):
         if np.sum(max_col > thres_t) < threshold_cell_num:
@@ -98,12 +97,12 @@ def detect_highly_variable_genes(sdata,batch_key = 'batch',n_top_genes = 4000,co
     sdata : AnnData
         Annotated data matrix.
     batch_key : str, optional (default: 'batch')
-        The column name of the samples in sdata.obs
+        The column name of the samples in `sdata.obs`.
     n_top_genes : int, optional (default: 4000)
-        The number of genes to keep - the function result may contain more genes than this because it uses the smallest integer threshold to get at least this many genes.
+        The number of genes to keep - the result uses the smallest integer threshold to get at least this many genes.
     count_layer : str, optional (default: 'count')
-        The layer in sdata.layers to use for the count data.
-        If count_layer is '.X', the function will use sdata.X for the count data.
+        The layer in `sdata.layers` to use for the count data.
+        If count_layer is '.X', the function will use `sdata.X` for the count data.
 
     Returns
     -------
@@ -143,14 +142,14 @@ def extract_coords_exp(sdata, batch_key = 'batch', cols = 'spatial', count_layer
     sdata : AnnData
         Annotated data matrix.
     batch_key : str, optional (default: 'batch')
-        The column name of the samples in sdata.obs
+        The column name of the samples in `sdata.obs`.
     cols : 'spatial' | list, optional (default: 'spatial')
-        The column name of the coordinates. If cols is 'spatial', the function will use sdata.obsm['spatial'] for the coordinates. Otherwise, the function will use sdata.obs[cols] for the coordinates.
+        The column name of the coordinates. If cols is 'spatial', the function will use `sdata.obsm['spatial']` for the coordinates. Otherwise, the function will use `sdata.obs[cols]` for the coordinates.
     count_layer : str, optional (default: 'count')
         The layer in sdata.layers to use for the count data.
-        If count_layer is '.X', the function will use sdata.X for the count data.
+        If count_layer is '.X', the function will use `sdata.X` for the count data.
     data_format : str, optional (default: 'norm1e4')
-        The name of the layer in sdata.layers to use for the data.
+        The name of the layer in `sdata.layers` to use for the data.
     ifcombat : bool, optional (default: False)
         Whether or not to use ComBat to correct for batch effects.
     if_inte : bool, optional (default: False)
@@ -161,7 +160,7 @@ def extract_coords_exp(sdata, batch_key = 'batch', cols = 'spatial', count_layer
     coords_raw : dict[str,np.ndarray]
         The spatial data matrix with the coordinate position of each cell, indexed by sample name.
     exps : dict[str,np.ndarray]
-        The gene expression data for each coordinate in coords_raw, indexed by sample name.
+        The gene expression data for each coordinate in `coords_raw`, indexed by sample name.
     """
 
     coords_raw = {}
@@ -225,9 +224,9 @@ def Harmony_integration(sdata_inte, scaled_layer, use_highly_variable_t, batch_k
     scaled_layer : str
         The name of the layer in sdata.layers to use for the scaled data.
     use_highly_variable_t : bool
-        Whether or not to use highly variable genes for PCA. If true, the algorithm will use highly variable genes only, stored in .var['highly_variable']. 
+        Whether or not to use highly variable genes for PCA. If true, the algorithm will use highly variable genes only, stored in `sdata_inte.var['highly_variable']`. 
     batch_key : str
-        The column name of the samples in sdata.obs.
+        The column name of the samples in `sdata.obs`.
     umap_n_neighbors : int
         The number of neighbors to use for the UMAP.
     umap_n_pcs : int
@@ -237,14 +236,14 @@ def Harmony_integration(sdata_inte, scaled_layer, use_highly_variable_t, batch_k
     spread_t : int
         The spread to use for the UMAP.
     source_sample_ctype_col : str
-        The key in sdata.obs to split batches on.
+        The key in `sdata.obs` to split batches on.
     output_path : str
         The path to save the output.
-    n_components : int (default: 50)
+    n_components : int, optional (default: 50)
         The number of components to use for the Harmony integration.
-    ifplot : bool (default: True)
+    ifplot : bool, optional (default: True)
         Whether or not to plot the UMAP results.
-    ifcombat : bool (default: False)
+    ifcombat : bool, optional (default: False)
         Whether or not to initially run ComBat to correct for batch effects.
     
     Returns
@@ -301,14 +300,14 @@ def random_sample(coords_t, nodenum, seed_t = 2):
 
 def sub_node_sum(coords_t,exp_t,nodenum=1000,vis = True,seed_t = 2):
     """
-    Randomly selects nodenum nodes from coords_t and returns the subnode expression matrix for the nearest neighbor of each chosen point.
+    Randomly selects `nodenum` nodes from `coords_t` and returns the subnode expression matrix for the nearest neighbor of each chosen point.
 
     Parameters
     ----------
     coords_t : np.ndarray
         The spatial data matrix with the coordinate of each cell.
     exp_t : np.ndarray
-        The gene expression data for each coordinate in coords_t.
+        The gene expression data for each coordinate in `coords_t`.
     nodenum : int, optional (default: 1000)
         The number of nodes to return. If this is larger than the total number of nodes, the original data will be returned.
     vis : bool, optional (default: True)
@@ -321,7 +320,7 @@ def sub_node_sum(coords_t,exp_t,nodenum=1000,vis = True,seed_t = 2):
     exp_t_sub : ndarray
         The subnode expression matrix of the nearest neighbor of each chosen point.
     sub_node_idx : ndarray
-        The nodenum-length sorted array of indicies chosen from coords_t.
+        The nodenum-length sorted array of indicies chosen from `coords_t`.
     """
 
     from scipy.sparse import csr_matrix as csr
@@ -363,7 +362,7 @@ def sub_node_sum(coords_t,exp_t,nodenum=1000,vis = True,seed_t = 2):
 
 def nearest_neighbors_idx(coord1,coord2,mode_t = 'knn'): ### coord1 is the reference, coord2 is the target
     """
-    Finds each coord2 point's the nearest neighbor in coord1.
+    Finds each `coord2` point's nearest neighbor in `coord1`.
     
     Parameters 
     ----------
@@ -377,7 +376,7 @@ def nearest_neighbors_idx(coord1,coord2,mode_t = 'knn'): ### coord1 is the refer
     Returns
     -------
     close_idx : ndarray
-        The index of each point in coord2's nearest neighbor in coord1. 
+        The index of each point in `coord2`'s nearest neighbor in `coord1`. 
     """
 
     if mode_t == 'knn':
@@ -424,7 +423,7 @@ def non_zero_center_scale(sdata_t_X):
 
 def sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000, if_non_zero_center_scale = True):
     """
-    For each sample in sample_list, extracts nodenum_t random nodes and returns their coordinates and expression matrix.
+    For each sample in `sample_list`, extracts `nodenum_t` random nodes and returns their coordinates and expression matrix.
 
     Parameters
     ----------
@@ -433,7 +432,7 @@ def sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000, if_non_zer
     coords_raw : dict[str,np.ndarray]
         The spatial data matrix with the cell coordinate positions, indexed by sample.
     exps : dict[str,np.ndarray]
-        The gene expression data for each coordinate in coords_raw.
+        The gene expression data for each coordinate in `coords_raw`.
     nodenum_t : int, optional (default: 20000)
         The number of nodes to return.
     if_non_zero_center_scale : bool, optional (default: True)
@@ -442,11 +441,11 @@ def sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000, if_non_zer
     Returns
     -------
     coords_sub : dict[str,np.ndarray]
-        The sub-node coordinates for each sample in sample_list
+        The sub-node coordinates for each sample in `sample_list`.
     exp_sub : dict[str,np.ndarray]
-        The sub-node expression matrix for each sample in sample_list 
+        The sub-node expression matrix for each sample in `sample_list`.
     sub_node_idxs : dict[str,np.ndarray]
-        The sub-node indices for each sample in sample_list
+        The sub-node indices for each sample in `sample_list`.
     """
 
     coords_sub = dict()
@@ -462,7 +461,7 @@ def sub_data_extract(sample_list,coords_raw, exps, nodenum_t = 20000, if_non_zer
 
 def preprocess_fast(sdata1, mode = 'customized',target_sum=1e4,base = 2,zero_center = True,regressout = False):
     """
-    Converts the data to a csr matrix and preprocesses it in multiple ways: total counts, log transform, scale, and regress out (if regressout is True).
+    Converts the data to a CSR matrix and preprocesses it in multiple ways: total counts, log transform, scale, and regress out (if `regressout` is True).
 
     Parameters
     ----------
@@ -470,7 +469,7 @@ def preprocess_fast(sdata1, mode = 'customized',target_sum=1e4,base = 2,zero_cen
         Annotated data matrix.
     mode : 'customized' | 'default' , optional (default: 'customized')
         The mode of preprocessing.
-        If 'default', the function will use the default preprocessing parameters, regardless of if other parameters are passed in.
+        If 'default', the function will use the default preprocessing parameters, regardless of if other parameters are passed in.\n
         If 'customized', the user can specify the target sum, base, zero center, and regressout parameters.
     target_sum : float, optional (default: 1e4)
         The target sum for the normalization (if 'mode' is 'customized').
@@ -479,7 +478,7 @@ def preprocess_fast(sdata1, mode = 'customized',target_sum=1e4,base = 2,zero_cen
     zero_center : bool, optional (default: True)
         Whether or not to zero center the data.
     regressout : bool, optional (default: False)
-        Whether or not to use scanpy.pp.regress_out on the total counts.
+        Whether or not to use `scanpy.pp.regress_out` on the total counts.
     
     Returns
     -------
@@ -562,9 +561,9 @@ def preprocess_fast(sdata1, mode = 'customized',target_sum=1e4,base = 2,zero_cen
 
 def cell_select(coords_t, s=0.5, c=None, output_path_t=None):
     """
-    Displays an interactive widget to select cells by drawing a polygon on the plot.
-    Click the "Finish Polygon" button to finish drawing the polygon.
-    Click the "Clear Polygon" button to clear the polygon.
+    Displays an interactive ipywidget to select cells by drawing a polygon on the plot.\n
+    Click the "Finish Polygon" button to finish drawing the polygon.\n
+    Click the "Clear Polygon" button to clear the polygon.\n
 
     Parameters
     ----------

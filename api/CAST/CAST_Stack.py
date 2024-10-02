@@ -15,10 +15,10 @@ class reg_params:
     """
     Parameters for the registration process.
 
-    - **Prelocation parameters**: theta_r1, d_list, mirror_t 
-    - **Affine-gd parameters**: theta_r2, translation_params, alpha_basis, iterations, dist_penalty1, attention_params
+    - **Prelocation parameters**: theta_r1, d_list, mirror_t, translation_params 
+    - **Affine parameters**: theta_r2, alpha_basis, iterations, dist_penalty1, attention_params, ifrigid
     - **FFD parameters**: mesh_trans_list, attention_region, attention_params_bs, mesh_weight, iterations_bs, alpha_basis_bs, meshsize, img_size_bs, dist_penalty2, PaddingRate_bs
-    - **Common parameters**: dataname, bleeding, diff_step, min_qr2, mean_q, mean_r, gpu, device, ifrigid
+    - **Common parameters**: dataname, bleeding, diff_step, min_qr2, mean_q, mean_r, gpu, device
     """
 
     #: -----------------------
@@ -28,12 +28,17 @@ class reg_params:
     #: Initial rotation angle for pre-location.
     theta_r1 : float = 0
 
-    #: These values will be multiplied by the query sample to calculate the cost function. For example, if the list contains 2, the function evaluates whether a two-fold increase of the coordinates reduces loss during pre-location.
+    #: The scale values to evalulate during pre-location. For example, if the list contains 2, the function evaluates whether a two-fold increase of the coordinates reduces loss.
     d_list : list[float] = field(default_factory=list) 
 
-    #: The mirror transformation for the pre-location. The elements of d_list will be multiplied by the elements of mirror_t
+    #: The mirror transformation for the pre-location. The elements of d_list will be multiplied by the elements of mirror_t to evaluate the cost function.
     mirror_t : list[float] = None
 
+    translation_params : list[float] = None
+    """
+        A description of the evenly-spaced grid used for translations considered during pre-location. The first two elements are multiplicative factors for the grid boundaries (the first element for x and the second element for y), and the third element is the step size for the grid. 
+        If omitted, no translation is done in pre-location.
+    """
 
     #: -----------------
     #: AFFINE PARAMETERS 
@@ -44,46 +49,40 @@ class reg_params:
     #: Initial rotation angle for affine transformation. 
     theta_r2 : float = 0
 
-    #: The maximum translation ratio for the pre-location. The first element is the maximum ratio of x, the second element is the maximum ratio of y, and the third element is the grid dimensions for translation.
-    #: If omitted, no translation is done in pre-location.
-    translation_params : list[float] = None
-    """
-        The maximum translation ratio for the pre-location. The first element is the maximum ratio of x, the second element is the maximum ratio of y, and the third element is the grid dimensions for translation.
-        If omitted, no translation is done in pre-location.
-    """
-
-    #: The coefficients for updating the affine transformation. The first two elements are the coefficients for the scaling, the third element is the coefficient for the rotation, and the last two elements are the coefficients for the translation.
+    #: The coefficients for updating the affine transformation during gradient descent. The first two elements are the coefficients for the scaling, the third element is the coefficient for the rotation, and the last two elements are the coefficients for the translation.
     alpha_basis : list[float] = field(default_factory=list) 
 
     iterations : int = 500 
     """
-        The number of iterations for the affine transformation. We compared the results of aligning S4 to S1 using 100 and 500 iterations. The results showed that in the 100-step task, the DG region of the query sample exhibited a small shift to the one in the reference sample and the five parameters did not converge, in contrast to the 500-step task. Thus, 500 steps were necessary in this case.
+        The number of iterations for the affine transformation gradient descent. \n
+        We compared the results of aligning S4 to S1 using 100 and 500 iterations. The results showed that in the 100-step task, the DG region of the query sample exhibited a small shift to the one in the reference sample and the five parameters did not converge, in contrast to the 500-step task. Thus, 500 steps were necessary in this case.
     """
 
     dist_penalty1 : float = 0 
     """
-        Distance penalty in affine transformation. When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will add additional distance penalty. \n
-            The initial cost function value of these cells will be multiplied by the `dist_penalty1`. \n
-            If omitted, no distance penalty will be added.
+        Distance penalty in affine transformation. When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will multiply the initial cost function of those cells by `dist_penalty1`. \n
+        If omitted, no distance penalty will be added.
     """
 
     attention_params: list[float] = field(default_factory=list) 
     """
-        The attention mechanism to increase the penalty of the cells. If omitted or 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.\n
+        The attention mechanism to increase the penalty of some cells. If omitted, 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.\n
             
-        - The first element is the attention region - The True/False index of all the cells of the query sample or None.\n
-        - The second element is the double penalty -  The `average cell distance / double_penalty` will be used in distance penalty for the cells with attention. \n
-        - The third element is the additional penalty for the attention cells. The initial cost function value of these cells will be multiplied by `penalty_inc_all`.  \n
-        - The last element is the additional penalty for the cells with distance penalty and attention. The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.\n
+        - The first element describes the attention region — an np.ndarry of True/False values for each cell in the query sample or None.\n
+        - The second element is the double penalty -  The cost function of cells with attention will be multiplied by this value. \n
+        - The third element is the additional penalty for the attention cells - The cost function of cells with attention will be multiplied by this value.  \n
+        - The last element is the additional penalty for the cells with distance penalty and attention (`penalty_inc_both`). The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.\n
     """
-
+    
+    #: If True, the affine transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
+    ifrigid : bool = False
 
     #: ------------------
     #: BSPLINE PARAMETERS 
     #: ------------------
 
 
-    #: A list of the transformed mesh grids for each round of FFD.
+    #: A list of the transformed mesh grids for each round of FFD, used to apply the FFD transformation to the query sample.
     mesh_trans_list : list[float] = field(default_factory=list)
 
     #: The region to apply the attention mechanism. The True/False index of all the cells of the query sample or None.
@@ -91,15 +90,15 @@ class reg_params:
 
     attention_params_bs : list[float] = field(default_factory=list) 
     """
-        The attention mechanism to increase the penalty of the cells. Refer to `attention_params`.
+        The attention mechanism to increase the penalty of the cells for calculating the loss during BSpline gradient descent. Refer to `attention_params`.
     """
 
-    #: The weight matrix for the mesh grid. The same size of the mesh or None.
+    #: The weight matrix for the mesh grid (used as a multiplicative factor for the gradient). This is an np.ndarry of the same shape as the mesh grid, else it is set to 1.
     mesh_weight : list[float] = field(default_factory=list) 
 
     iterations_bs : list[float] = field(default_factory=list)   
     """
-        Number of iterations of the FFD. We compared the results of aligning S4 to S1 using 50 and 400 iterations. The results showed that CA1 could be better aligned in the 400-step task than the 50-step task.
+        Number of iterations of the FFD. We compared the results of aligning S4 to S1 using 50 and 400 iterations. The results showed that the CA1 region could be better aligned in the 400-step task than the 50-step task.
     """
 
     #: The learning rate for the FFD transformation.
@@ -108,12 +107,11 @@ class reg_params:
 
     meshsize : list[float] = field(default_factory=list)  
     """
-        The mesh size for the FFD. 
-        A smaller number of the meshgrid generally gives coarse-grained adjustment, while a higher number of the meshgrid could adjust more details. We observed that the S4 to S1 alignment task with the meshsize = 4 exhibits poor alignment performance compared to the tasks with meshsize = 8 or meshsize = 10.
+        The mesh size for the FFD (as the number of meshgrid cells in each dimension). A smaller value of `meshsize` generally gives coarse-grained adjustment, while a higher value of `meshsize` could adjust more details. We observed that the S4 to S1 alignment task with a `meshsize` of 4 exhibits poor alignment performance compared to the tasks with a `meshsize` of 8 or a `meshsize` of 10.
     """
 
 
-    #: The maximum x and y coordinates of the image. 
+    #: The size of the image to transform for each round of the FFD transformation. 
     img_size_bs : list[float] = field(default_factory=list) 
 
     #: Distance penalty parameter in FFD. Refer to `dist_penalty1`.
@@ -132,31 +130,27 @@ class reg_params:
     #: Name of the dataset
     dataname : str = ''
 
-    #: When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
+    #: When the reference sample is larger than the query sample, for efficient computation, only the region of the reference sample within `bleeding` distance of the query sample will be considered when calculating the cost function.
     bleeding : float = 500 
 
-    #: The step size for calculating the gradient.
+    #: The distance used for approximating the gradient. The gradient is approximated by the difference between the cost function values of the query sample with the small change of ±`diff_step` in the query sample coordinates.
     diff_step : float = 5
 
-    #: The minimum value of the query sample - this is subtracted from the query sample before FFD.
+    #: The minimum value of the query sample - this is subtracted from the query sample before FFD transformation.
     min_qr2 : float = 0
 
-    #: The mean value of the query sample.
+    #: The mean value of the query sample coordinates.
     mean_q : float = 0
 
-    #: The mean value of the reference sample.
+    #: The mean value of the reference sample coordinates.
     mean_r : float = 0
 
     #: The GPU device number. If -1, the CPU will be used.
     gpu: int = 0
 
-    #: The device for the computation.
+    #: The device for the computation. This is set automatically based on the GPU number.
     device : str = field(init=False)
 
-    #: If True, the transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
-    ifrigid : bool = False
-
-    
     
     
     def __post_init__(self):
@@ -167,45 +161,59 @@ class reg_params:
             self.device = 'cpu'
 
 def get_range(sp_coords):
-    """Get the x and y range of the coordinates as a tuple."""
+    """Gets the x and y range of a set of coordinates.
+    
+    Parameters 
+    ----------
+    sp_coords : array-like
+        The coordinates of the sample.
+    
+    Returns
+    -------
+    xrng : float
+        The range of the x coordinates.
+    yrng : float
+        The range of the y coordinates.
+    """
+
     yrng = max(sp_coords, key=lambda x:x[1])[1] - min(sp_coords, key=lambda x:x[1])[1]
     xrng = max(sp_coords, key=lambda x:x[0])[0] - min(sp_coords, key=lambda x:x[0])[0]
     return xrng, yrng
 
 def prelocate(coords_q,coords_r,cov_anchor_it,bleeding,output_path,d_list=[1,2,3],prefix = 'test',ifplot = True,index_list = None,translation_params = None,mirror_t = None):
     """
-    Performs the pre-location step of the registration process.
+    Performs the pre-location step of the registration process - finds the best cost function value for different fixed affine transformation parameters to reduce computation time and avoid local minima in full affine gradient descent.
     
     Parameters
     ----------
     coords_q : torch.Tensor
-        The query sample.
+        The query sample coordinates.
     coords_r : torch.Tensor
-        The reference sample.
+        The reference sample coordinates.
     cov_anchor_it : 2D array-like
         The covariance matrix of the query and reference sample.
     bleeding : int
-        When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
+        When the reference sample is larger than the query sample, for efficient computation, only the region of the reference sample within `bleeding` distance of the query sample is considered when calculating the cost function.
     output_path : str
-        The path to save the visualization if ifplot is True.
-    d_list : list[float] (default = [1,2,3])
-        These values will be multiplied by the query sample to calculate the cost function. For example, if the list contains 2, the function evaluates whether a two-fold increase of the coordinates reduces loss.
-    prefix : str (default = 'test')
-        The prefix of the saved plots if ifplot is True.
-    ifplot : bool (default = True)
-        If True, the visualization of the pre-location will be saved.
-    index_list : list[list[bool]]
-        A mask indicating which cells to consider in the query and reference samples. If omitted, all the cells will be used.
-    translation_params : list[float]
-        The maximum translation ratio for the pre-location. The first element is the maximum ratio of x, the second element is the maximum ratio of y, and the third element is the grid dimensions for translation.
+        The path to save the visualizations if `ifplot` is True.
+    d_list : list[float], optional (default: [1,2,3])
+        The scale values to evalulate during pre-location. For example, if the list contains 2, the function evaluates whether a two-fold increase of the coordinates reduces loss.
+    prefix : str, optional (default: 'test')
+        The prefix of the saved plots if `ifplot` is True.
+    ifplot : bool, optional (default: True)
+        If True, the visualization of the pre-location will be saved at `output_path`.
+    index_list : list[np.array[bool]], optional
+        A mask indicating which cells to consider in the query and reference samples when calculating loss. If omitted, all cells will be used.
+    translation_params : list[float], optional
+        A description of the evenly-spaced grid used for translations considered during pre-location. The first two elements are multiplicative factors for the grid boundaries (the first element for x and the second element for y), and the third element is the step size for the grid. \n
         If omitted, no translation is done in pre-location.
-    mirror_t : list[float] (default = [1,-1])
-        The mirror transformation for the pre-location. The elements of d_list will be multiplied by the elements of mirror_t.
+    mirror_t : list[float], optional (default: [1,-1])
+        The mirror transformations for the pre-location. The elements of d_list will be multiplied by the elements of mirror_t.
         
     Returns
     -------
     theta : torch.Tensor
-        The optimal parameters for the pre-location.
+        The optimal affine parameters found during pre-location. The format of this is that the first two elements are the coefficients for scaling in x and y, the third element is the rotation in degrees, and the last two elements are the coefficients for translation in x and y.
     """
 
     idx_q = np.ones(coords_q.shape[0],dtype=bool) if index_list is None else index_list[0]
@@ -256,48 +264,50 @@ def Affine_GD(coords_query_it_raw,coords_ref_it,cov_anchor_it,output_path,bleedi
     Parameters
     ----------
     coords_query_it_raw : torch.Tensor
-        The query sample.
+        The query sample coordinates.
     coords_ref_it : torch.Tensor
-        The reference sample.
+        The reference sample coordinates.
     cov_anchor_it : 2D array-like
         The covariance matrix of the query and reference sample.
-    bleeding : int (default = 500)
-        When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
-    dist_penalty : float (default = 0)
-        When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will add additional distance penalty. 
-        The initial cost function value of these cells will be multiplied by the `dist_penalty`.
-        If omitted, no additional distance penalty will be added.
-    diff_step : float (default = 50)
-        The step size for calculating the gradient.
-    alpha_basis : np.array (default = np.reshape(np.array([0,0,1/5,2,2]),[5,1]))
-        The coefficients for calculating the learning rate for each parameter in the affine transformation. The first two elements are the coefficients for the scaling, the third element is the coefficient for the rotation, and the last two elements are the coefficients for the translation.
-    iterations : int (default = 50)
-        The number of iterations for the affine transformation.
-    prefix : str (default = 'test')
-        The prefix of the saved plots if mid_visual is True.
-    attention_params : list[float]
-        The attention mechanism to increase the penalty of the cells. If omitted or 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.
-            The first element is the attention region - The True/False index of all the cells of the query sample or None.
-            The second element is the double penalty -  The `average cell distance / double_penalty` will be used in distance penalty for the cells with attention. 
-            The third element is the additional penalty for the attention cells. The initial cost function value of these cells will be multiplied by `penalty_inc_all`.  
-            The last element is the additional penalty for the cells with distance penalty and attention. The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.
-    scale_t : float (default = 1)
-        The scaling factor for the visualization.
-    coords_log : bool (default = False)
+    bleeding : int, optional (default: 500)
+        When the reference sample is larger than the query sample, for efficient computation, only the region of the reference sample within `bleeding` distance of the query sample will be considered when calculating the cost function.
+    dist_penalty : float, optional (default: 0)
+        Distance penalty in affine transformation. When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will multiply the initial cost function of those cells by `dist_penalty1`. \n
+        If omitted, no distance penalty will be added.
+    diff_step : float, optional (default: 50)
+        The distance used for approximating the gradient. The gradient is approximated by the difference between the cost function values of the query sample with the small change of ±`diff_step` in the query sample coordinates.
+    alpha_basis : np.array, optional (default: np.reshape(np.array([0,0,1/5,2,2]),[5,1]))
+        The initial coefficients for calculating the learning rate for each parameter in the affine transformation. These constants are then multiplied by a decreasing function for each iteration. Following the format of theta, the first two elements are the coefficients for the scaling, the third element is the coefficient for the rotation, and the last two elements are the coefficients for the translation.
+    iterations : int, optional (default: 50)
+        The number of iterations for the affine transformation. We compared the results of aligning S4 to S1 using 100 and 500 iterations. The results showed that in the 100-step task, the DG region of the query sample exhibited a small shift to the one in the reference sample and the five parameters did not converge, in contrast to the 500-step task. Thus, 500 steps were necessary in this case.
+    prefix : str, optional (default: 'test')
+        The prefix of the file names for the saved plots if `mid_visual` is True.
+    attention_params : list[float], optional
+        The attention mechanism to increase the penalty of some cells. If omitted, 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.\n
+        - The first element describes the attention region — an np.ndarry of True/False values for each cell in the query sample or None.\n
+        - The second element is the double penalty -  The cost function of cells with attention will be multiplied by this value. \n
+        - The third element is the additional penalty for the attention cells - The cost function of cells with attention will be multiplied by this value.  \n
+        - The last element is the additional penalty for the cells with distance penalty and attention (`penalty_inc_both`). The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.\n
+    scale_t : float, optional (default: 1)
+        The scaling factor for the visualization (if `mid_visual` is true).
+    coords_log : bool, optional (default: False)
         If True, the coordinates of the query sample will be saved for each iteration.
-    index_list : list[list[bool]]
-        A mask indicating which cells to consider in the query and reference samples. If omitted, all the cells will be used.
-    mid_visual : bool (default = False)
-        If True, plot and save intermediate results (initial positions, as well as every 20 iterations of gradient descent).
-    early_stop_thres : float (default = 1)
+    index_list : list[np.ndarray[bool]], optional
+       A mask indicating which cells to consider in the query and reference samples when calculating loss. If omitted, all cells will be used.
+    mid_visual : bool, optional (default: False)
+        If True, the function plots and saves intermediate results (the initial positions and the results after every 20 iterations of gradient descent).
+    early_stop_thres : float, optional (default: 1)
         The threshold for early stopping. If the cost function does not change more than the threshold for five consecutive iterations, the registration process will be stopped.
-    ifrigid : bool (default = False)
-        If True, the transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
+    ifrigid : bool, optional (default: False)
+        If True, the affine transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
 
     Returns 
     -------
     list[list[float], list[torch.Tensor], list[torch.Tensor], list[np.array]]
-        The cost function value per iteration, the gradient of the cost function per iteration, the parameters for the affine transformation per iteration, and the coordinates of the query sample for each iteration (if coords_log is True).
+        - The cost function value for each iteration. \n
+        - The gradient of the cost function for each iteration. \n
+        - The parameters for the affine transformation for each iteration. The format of this is that the first two elements are the coefficients for scaling in x and y, the third element is the rotation in degrees, and the last two elements are the coefficients for translation in x and y. \n
+        - The coordinates of the query sample for each iteration (if `coords_log` is True).
     """
 
     # reformating inputs 
@@ -369,51 +379,55 @@ def BSpline_GD(coords_q,coords_r,cov_anchor_it,iterations,output_path,bleeding, 
     Parameters
     ----------
     coords_q : torch.Tensor
-        The query sample.
+        The query sample coordinates.
     coords_r : torch.Tensor
-        The reference sample.
+        The reference sample coordinates.
     cov_anchor_it : 2D array-like
         The covariance matrix of the query and reference sample.
     iterations : int
-        The number of iterations for the gradient descent.
+        The number of iterations for gradient descent. We compared the results of aligning S4 to S1 using 50 and 400 iterations. The results showed that the CA1 region could be better aligned in the 400-step task than the 50-step task.
     output_path : str
-        The path to save the visualization if mid_visual is True.
+        The path to save the visualization if `mid_visual` is True.
     bleeding : int
-        When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
+        When the reference sample is larger than the query sample, for efficient computation, only the region of the reference sample within `bleeding` distance of the query sample will be considered when calculating the cost function.
     dist_penalty : float, optional
-        When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will add additional distance penalty. 
-        The initial cost function value of these cells will be multiplied by the `dist_penalty`. If omitted, no additional distance penalty will be added.
+        Distance penalty in affine transformation. When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will multiply the initial cost function of those cells by `dist_penalty1`. \n
+        If omitted, no distance penalty will be added.
     alpha_basis : float, optional (default: 1000)
-        The learning rate for the FFD transformation.
+        The learning rate for the FFD transformation. 
     diff_step : float, optional (default: 50)
-        The step size for calculating the gradient.
+        The distance used for approximating the gradient. The gradient is approximated by the difference between the cost function values of the query sample with the small change of ±`diff_step` in the query sample coordinates.
     mesh_size : int, optional (default: 5)
-        The mesh size for the FFD.
+        The mesh size for the FFD (as the number of meshgrid cells in each dimension). A smaller `mesh_size` generally gives coarse-grained adjustment, while a larger `mesh_size` could adjust more details. We observed that the S4 to S1 alignment task with a `mesh_size` of 4 exhibits poor alignment performance compared to the tasks a `mesh_size` of 8 or a `mesh_size` of 10.
     prefix : str, optional (default: 'test')
-        The prefix of the saved plots if mid_visual is True.
+        The prefix of the saved plots if `mid_visual` is True.
     mesh_weight : np.array, optional (default: 1)
-        The weight matrix for the mesh grid (multiplicative factor for the gradient). 
+        The weight matrix for the mesh grid (used as a multiplicative factor for the gradient). This is an np.ndarry of the same shape as the mesh grid, else it is set to 1.
     attention_params : list[float], optional 
-        The attention mechanism to increase the penalty of the cells. If omitted or 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.
-            The first element is the attention region - The True/False index of all the cells of the query sample or None.
-            The second element is the double penalty -  The `average cell distance / double_penalty` will be used in distance penalty for the cells with attention. 
-            The third element is the additional penalty for the attention cells. The initial cost function value of these cells will be multiplied by `penalty_inc_all`.  
-            The last element is the additional penalty for the cells with distance penalty and attention. The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.
+        The attention mechanism to increase the penalty of some cells. If omitted, 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.\n
+        - The first element describes the attention region — an np.ndarry of True/False values for each cell in the query sample or None.\n
+        - The second element is the double penalty -  The cost function of cells with attention will be multiplied by this value. \n
+        - The third element is the additional penalty for the attention cells - The cost function of cells with attention will be multiplied by this value.  \n
+        - The last element is the additional penalty for the cells with distance penalty and attention (`penalty_inc_both`). The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.\n
     scale_t : float, optional (default: 1)
-        The scaling factor for the visualization.
+        The scaling factor for the visualization (if `mid_visual` is true).
     coords_log : bool, optional (default: False)
         If True, the coordinates of the query sample will be saved for each iteration.
     index_list : list[list[bool]]
-        A mask indicating which cells to consider in the query and reference samples. If omitted, all the cells will be used.
+        A mask indicating which cells to consider in the query and reference samples when calculating loss. If omitted, all cells will be used.
     mid_visual : bool, optional (default: False)
-        If True, plot and save intermediate results (initial positions, as well as every 20 iterations of gradient descent).
+        If True, the function plots and saves intermediate results (the initial positions and the results after every 20 iterations of gradient descent).
     max_xy : torch.Tensor, optional 
-        The maximum x and y coordinates for the mesh. If omitted, use the maximum x and y coordinates of the query sample.
+        The maximum x and y coordinates for the mesh. If omitted, the maximum x and y coordinates of the query sample are used.
     
     Returns
     -------
     list[np.array]
-        The coordinates of the query sample after the FFD transformation, the mesh transformation for each iteration, the FFD transformation for each iteration, the cost function value per iteration, and the coordinates of the query sample for each iteration (if coords_log is True).
+        - The coordinates of the query sample after the FFD transformation\n
+        - The mesh grid for each iteration, \n
+        - The gradient for each iteration.\n
+        - The cost function value per iteration\n
+        - The coordinates of the query sample for each iteration (if `coords_log` is True).
     """
 
     idx_q = np.ones(coords_q.shape[0],dtype=bool) if index_list is None else index_list[0]
@@ -461,7 +475,7 @@ def BSpline_GD(coords_q,coords_r,cov_anchor_it,iterations,output_path,bleeding, 
         if coords_log:
             coords_q_log.append(coords_query_it.detach().cpu().numpy()) # log the coordinates of the query sample
 
-        # save the loss function value
+        # save the cost function value
         sscore_t = J_cal(coords_query_it[idx_q],coords_r[idx_r],cov_anchor_it,bleeding,dist_penalty,attention_params).sum().cpu().item()
         t.set_description(f'Loss: {sscore_t:.3f}')
         t.refresh()
@@ -502,33 +516,32 @@ def BSpline_GD(coords_q,coords_r,cov_anchor_it,iterations,output_path,bleeding, 
 
 def J_cal(coords_q,coords_r,cov_mat,bleeding = 10, dist_penalty = 0,attention_params = [None,3,1,0]):
     """
-    Calculates the cost function based on the covariance matrix and the distance between the query and reference samples.
+    Calculates the cost function based on the covariance matrix and the distance between the query and reference samples (applying bleeding, distance penalty, and the attention mechanism).
 
     Parameters
     ----------
     coords_q : torch.Tensor
-        The query sample.
+        The query sample coordinates.
     coords_r : torch.Tensor
-        The reference sample.
+        The reference sample coordinates.
     cov_mat : 2D array-like
         The covariance matrix of the query and reference sample.
-    bleeding : int (default = 10)
-        When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
-    dist_penalty : float 
-        When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will add additional distance penalty. 
-        The initial cost function value of these cells will be multiplied by the `dist_penalty`.
-        If omitted, no additional distance penalty will be added.
-    attention_params : list[float]
-        The attention mechanism to increase the penalty of the cells. If omitted or 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.
-            The first element is the attention region - The True/False index of all the cells of the query sample or None.
-            The second element is the double penalty -  The `average cell distance / double_penalty` will be used in distance penalty for the cells with attention. 
-            The third element is the additional penalty for the attention cells. The initial cost function value of these cells will be multiplied by `penalty_inc_all`.  
-            The last element is the additional penalty for the cells with distance penalty and attention. The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.
+    bleeding : int, optional (default: 10)
+        When the reference sample is larger than the query sample, for efficient computation, only the region of the reference sample within `bleeding` distance of the query sample will be considered when calculating the cost function.
+    dist_penalty : float, optional
+        Distance penalty in affine transformation. When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will multiply the initial cost function of those cells by `dist_penalty1`. \n
+        If omitted, no distance penalty will be added.
+    attention_params : list[float], optional (default: [None, 3,1,0])
+        The attention mechanism to increase the penalty of some cells. If omitted, 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.\n
+        - The first element describes the attention region — an np.ndarry of True/False values for each cell in the query sample or None.\n
+        - The second element is the double penalty -  The cost function of cells with attention will be multiplied by this value. \n
+        - The third element is the additional penalty for the attention cells - The cost function of cells with attention will be multiplied by this value.  \n
+        - The last element is the additional penalty for the cells with distance penalty and attention (`penalty_inc_both`). The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.\n
 
     Returns
     -------
     np.array
-        The cost function array - the scaled covariance scores between each point in coords_q and its closest point in coords_r.
+        The cost function array - the scaled covariance scores between each point in `coords_q` and its closest point in `coords_r`.
     """
 
     attention_region,double_penalty,penalty_inc_all,penalty_inc_both = attention_params
@@ -567,12 +580,12 @@ def J_cal(coords_q,coords_r,cov_mat,bleeding = 10, dist_penalty = 0,attention_pa
 
 def alpha_init(alpha_basis,it,dev):
     """ 
-    Multiplies alpha_basis by 5/(it/40 + 1)^0.6 (a decreasing function of it) to get the alpha for the current iteration.
+    Multiplies the alpha_basis values by `5/(it/40 + 1)^0.6` (a decreasing function of `it`) to get the alpha value for the current iteration.
 
     Parameters
     ----------
     alpha_basis : torch.Tensor
-        The learning rate.
+        The initial coefficients of the learning rate for each element of theta in Affine transformation. 
     it : int
         The current iteration.
     dev : str
@@ -581,7 +594,9 @@ def alpha_init(alpha_basis,it,dev):
     Returns 
     -------
     torch.Tensor
+        The learning rates for the current iteration.
     """
+
     return 5/torch.pow(torch.Tensor([it/40 + 1]).to(dev),0.6) * alpha_basis
 
 def dJ_dt_cal(coords_q,coords_r,diff_step,dev,cov_anchor_it,bleeding,dist_penalty,attention_params):
@@ -591,32 +606,31 @@ def dJ_dt_cal(coords_q,coords_r,diff_step,dev,cov_anchor_it,bleeding,dist_penalt
     Parameters
     ----------
     coords_q : torch.Tensor
-        The query sample.
+        The query sample coordinates.
     coords_r : torch.Tensor
-        The reference sample.
+        The reference sample coordinates.
     diff_step : float
-        The step size for calculating the gradient.
+        The distance used for approximating the gradient. The gradient is approximated by the difference between the cost function values of the query sample with the small change of ±`diff_step` in the query sample coordinates.
     dev : str
         The device for the computation.
     cov_anchor_it : 2D array-like
         The covariance matrix of the query and reference sample.
     bleeding : int
-        When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
+        When the reference sample is larger than the query sample, for efficient computation, only the region of the reference sample within `bleeding` distance of the query sample will be considered when calculating the cost function.
     dist_penalty : float
-        When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will add additional distance penalty.
-        The initial cost function value of these cells will be multiplied by the `dist_penalty`.
-        If omitted, no additional distance penalty will be added.
+        Distance penalty in affine transformation. When the distance of the query cell to the nearest neighbor in the reference sample is greater than a distance threshold (by default, average cell distance), CAST Stack will multiply the initial cost function of those cells by `dist_penalty1`. \n
+        If omitted, no distance penalty will be added.
     attention_params : list[float]
-        The attention mechanism to increase the penalty of the cells. If omitted or 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.
-            The first element is the attention region - The True/False index of all the cells of the query sample or None.
-            The second element is the double penalty -  The `average cell distance / double_penalty` will be used in distance penalty for the cells with attention. 
-            The third element is the additional penalty for the attention cells. The initial cost function value of these cells will be multiplied by `penalty_inc_all`.  
-            The last element is the additional penalty for the cells with distance penalty and attention. The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.
+        The attention mechanism to increase the penalty of some cells. If omitted, 'dist_penalty' = 0 or the first element is None, no attention mechanism will be added.\n
+        - The first element describes the attention region — an np.ndarry of True/False values for each cell in the query sample or None.\n
+        - The second element is the double penalty -  The cost function of cells with attention will be multiplied by this value. \n
+        - The third element is the additional penalty for the attention cells - The cost function of cells with attention will be multiplied by this value.  \n
+        - The last element is the additional penalty for the cells with distance penalty and attention (`penalty_inc_both`). The initial cost function value of these cells will be multiplied by `(penalty_inc_both/dist_penalty + 1)`.\n
 
     Returns
     -------
-    np.array
-        The gradient of the loss with respect to x and y for each cell in the query sample
+    torch.Tensor
+        The stacked gradient of the loss with respect to x and y for each cell in the query sample.
     """
     dJ_dy = (J_cal(coords_q + torch.tensor([0,diff_step], device=dev),
                           coords_r,
@@ -649,25 +663,6 @@ def dJ_dtheta_cal(xi,yi,dJ_dxy_mat,theta,dev,ifrigid = False):
     """
     Calculates the gradient of the loss with respect to the affine transformation parameters.
 
-    #dxy_da:
-    #{x * cos(rad_phi), x * sin(rad_phi)}
-    #dxy_dd:
-    #{-y * sin(rad_phi), y * cos(rad_phi)}
-    #dxy_dphi:
-    #{-d * y * cos(rad_phi) - a * x * sin(rad_phi), a * x * cos(rad_phi) - d * y * sin(rad_phi)}
-    #dxy_dt1:
-    #{1, 0}
-    #dxy_dt2:
-    #{0, 1}
-
-    # when we set d = a (rigid):
-    #dxy_da 
-    #{x * cos(rad_phi) - y * sin(rad_phi), y * cos(rad_phi) + x * sin(rad_phi)}
-    #dxy_dd - set as the same value as dxy_da
-    #{x * cos(rad_phi) - y * sin(rad_phi), y * cos(rad_phi) + x * sin(rad_phi)}
-    #dxy_dphi
-    #{-a * y * cos(rad_phi) - a * x * sin(rad_phi), a * x * cos(rad_phi) - a * y * sin(rad_phi)}
-
     Parameters 
     ----------
     xi : torch.Tensor
@@ -677,16 +672,21 @@ def dJ_dtheta_cal(xi,yi,dJ_dxy_mat,theta,dev,ifrigid = False):
     dJ_dxy_mat : torch.Tensor
         The gradient of the loss with respect to x and y for each cell in the query sample.
     theta : torch.Tensor
-        The parameters of the affine transformation.
+        The parameters of the affine transformation. The format of this is that the first two elements are the coefficients for scaling in x and y, the third element is the rotation in degrees, and the last two elements are the coefficients for translation in x and y.
     dev : str
         The device for the computation.
-    ifrigid : bool (default = False)
-        If True, the transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
+    ifrigid : bool, optional (default: False)
+        If True, the affine transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
 
     Returns
     -------
     torch.Tensor
-        The gradient of the loss with respect to the affine transformation parameters.
+        The gradient of the loss with respect to the affine transformation parameters. \n 
+        - `dxy_da`: The gradient of the loss with respect to the scaling factor in x. {x * cos(rad_phi), x * sin(rad_phi)} if `ifrigid` is False, else {x * cos(rad_phi) - y * sin(rad_phi), y * cos(rad_phi) + x * sin(rad_phi)}. \n
+        - `dxy_dd`: The gradient of the loss with respect to the scaling factor in y. {-y * sin(rad_phi), y * cos(rad_phi)} if `ifrigid` is False, else the same value as dxy_da: {x * cos(rad_phi) - y * sin(rad_phi), y * cos(rad_phi) + x * sin(rad_phi)}. \n
+        -  `dxy_dphi`: The gradient of the loss with respect to the rotation. {-d * y * cos(rad_phi) - a * x * sin(rad_phi), a * x * cos(rad_phi) - d * y * sin(rad_phi)} \n
+        - `dxy_dt1`: The gradient of the loss with respect to the translation in x. {1, 0} \n
+        - `dxy_dt2`: The gradient of the loss with respect to the translation in y. {0, 1}
     """
 
     N = xi.shape[0]
@@ -740,18 +740,18 @@ def theta_renew(theta,dJ_dtheta,alpha,ifrigid = False):
     Parameters
     ----------
     theta : torch.Tensor
-        The current parameters of the affine transformation.
+        The current parameters of the affine transformation. The format of this is that the first two elements are the coefficients for scaling in x and y, the third element is the rotation in degrees, and the last two elements are the coefficients for translation in x and y.
     dJ_dtheta : torch.Tensor
-        The gradient of the cost function with respect to the affine transformation.
+        The gradient of the cost function with respect to the affine transformation parameters.
     alpha : float
-        The learning rate for the affine transformation.
-    ifrigid : bool (default = False)
-        If True, the transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
+        The learning rate.
+    ifrigid : bool, optional (default: False)
+        If True, the affine transformation must have a uniform scaling factor. If False, the affine transformation will be performed without constraints.
     
     Returns
     -------
     torch.Tensor
-        The updated parameters of the affine transformation.
+        The updated parameters of the affine transformation in the same format as `theta`.
     """
     alpha_dJ = alpha * dJ_dtheta.reshape(5,1)
     alpha_dJ[0:3] = alpha_dJ[0:3] / 1000 # avoid dtheta_{abcd} change a lot of x and y
@@ -765,12 +765,12 @@ def theta_renew(theta,dJ_dtheta,alpha,ifrigid = False):
 
 def affine_trans_t(theta,coords_t):
     """
-    Applies the affine transformation (defined by theta) to the coordinates.
+    Applies the affine transformation (defined by parameters theta) to the coordinates.
 
     Parameters
     ----------
     theta : torch.Tensor
-        The parameters of the affine transformation.
+        The parameters of the affine transformation. The format of this is that the first two elements are the coefficients for scaling in x and y, the third element is the rotation in degrees, and the last two elements are the coefficients for translation in x and y.
     coords_t : torch.Tensor
         The coordinates to be transformed.
 
@@ -825,16 +825,24 @@ def BSpline_GD_preparation(max_xy,mesh_size,dev,mesh_weight):
     max_xy : torch.Tensor
         The maximum x and y coordinates for the mesh.
     mesh_size : int
-        The mesh size for the FFD.
+        The mesh size for the FFD (as the number of meshgrid cells in each dimension). A smaller `mesh_size` generally gives coarse-grained adjustment, while a larger `mesh_size` could adjust more details. We observed that the S4 to S1 alignment task with a `mesh_size` of 4 exhibits poor alignment performance compared to the tasks a `mesh_size` of 8 or a `mesh_size` of 10.
     dev : str
         The device for the computation.
-    mesh_weight : np.ndarray, optional
-        The weight matrix for the mesh grid (multiplicative factor for the gradient). If omitted, set as 1.
+    mesh_weight : np.ndarray, optional (default: 1)
+        The weight matrix for the mesh grid (used as a multiplicative factor for the gradient). This is an np.ndarry of the same shape as the mesh grid, else it is set to 1.
     
     Returns
     -------
-    np.array, torch.Tensor | 1, torch.Tensor, torch.Tensor, torch.Tensor
-        The mesh grid, mesh weight, the indicies for the B-spline basis functions, the gradient of the FFD transformation, and the mesh grid size.
+    np.array
+        The mesh grid.
+    torch.Tensor | 1
+        The mesh weights.
+    torch.Tensor
+        The indices for the B-spline basis functions.
+    torch.Tensor
+        The initial gradient of the FFD transformation (zeros).
+    torch.Tensor
+        The mesh grid size.
     """
 
     # initialize the mesh grid 
@@ -864,14 +872,16 @@ def BSpline_GD_uv_ij_calculate(coords_query_it,delta,dev):
     coords_query_it : torch.Tensor
         The coordinates of the query sample.
     delta : torch.Tensor
-        The mesh grid size.
+        The mesh grid size (as a 2x1 tensor whose values represent physical lengths in x and y).
     dev : str
         The device for the computation.
     
     Returns
     -------
-    torch.Tensor, torch.Tensor
-        The uv coordinates (bottom-left coordinates of the containing mesh grid tile) and the ij coordinates (the position of the cell within the containing mesh grid tile) for each query cell. 
+    torch.Tensor
+        The uv coordinates (bottom-left coordinates of the containing mesh grid tile) for each query cell.
+    torch.Tensor
+        The ij coordinates (the position of the cell within the containing mesh grid tile) for each query cell. 
     """
 
     pos_reg = coords_query_it.T / delta.reshape(2,1).to(dev) # 2 * N
@@ -889,12 +899,12 @@ def B_matrix(uv_t, kls_t):
     uv_t : torch.Tensor
         The uv coordinates - the input for the B-spline basis functions (the coordinates of each cell within its containing mesh grid tile).
     kls_t : torch.Tensor
-        The kl values - the indices for the B-spline basis functions.
+        The kl values - the indices for the B-spline basis functions (as a 2 x 16 torch.Tensor).
 
     Returns
     -------
     torch.Tensor
-        The concatenated result of the B-spline basis functions indicated by kls_t.
+        The concatenated result of the B-spline basis functions indicated by `kls_t` (as a 16 * N[idx] torch.Tensor).
     """
 
     result_B_list = []
@@ -914,11 +924,11 @@ def get_dxy_ffd(ij,result_B_t,mesh,dJ_dxy_mat,mesh_weight,alpha_basis):
     result_B_t : torch.Tensor
         The concatenated result of the B-spline basis functions (generated by B_matrix).
     mesh : 2D array-like
-        The mesh grid.
+        The mesh grid (used only to determine the size of the gradient tensor).
     dJ_dxy_mat : torch.Tensor
         The gradient of the loss with respect to x and y for each cell in the query sample.
-    mesh_weight : torch.Tensor
-        The weight matrix for the mesh grid (multiplicative factor for the gradient).
+    mesh_weight : torch.Tensor | float
+        The weight matrix for the mesh grid (used as a multiplicative factor for the gradient). 
     alpha_basis : float
         The learning rate for the FFD transformation.
 
@@ -955,11 +965,11 @@ def BSpline_renew_coords(uv_t,kls_t,ij_t,mesh_trans):
     Parameters
     ----------
     uv_t : torch.Tensor
-        The uv coordinates - the input for the B-spline basis functions (the coordinates of each cell within its containing mesh grid tile).
+        The uv coordinates - the input for the B-spline basis functions (the coordinates of each query cell within its containing mesh grid tile).
     kls_t : torch.Tensor
         The kl values - the indices for the B-spline basis functions.
     ij_t : torch.Tensor
-        The ij coordinates - the position of all cells within their containing mesh grid.
+        The ij coordinates - the position of each query cell within their containing mesh grid.
     mesh_trans : torch.Tensor
         The transformed mesh grid.
 
@@ -979,21 +989,23 @@ def BSpline_renew_coords(uv_t,kls_t,ij_t,mesh_trans):
 
 def reg_total_t(coords_q,coords_r,params_dist):
     """
-    Applies the affine and FFD transformation described in params_dist to the query sample.
+    Applies the affine and FFD transformation described in `params_dist` to the query sample.
     
     Parameters
     ----------
     coords_q : array-like
-        The query sample.
+        The query sample coordiantes.
     coords_r : array-like
-        The reference sample.
+        The reference sample coordinates (used to recenter the transformed query sample to the reference sample mean).
     params_dist : reg_params
-        The parameters for the FFD transformation.
+        The parameters for the affine and FFD transformations.
         
     Returns
     -------
-    torch.Tensor, torch.Tensor
-        The coordinates of the query sample after the affine and FFD transformation, and the coordinates of the query sample after the affine and FFD transformation, recentered to the mean of the reference sample.
+    torch.Tensor
+        The coordinates of the query sample after the affine and FFD transformation.
+    torch.Tensor
+        The coordinates of the query sample after the affine and FFD transformation, recentered to the mean of the reference sample.
     """
 
     dev = params_dist.device
@@ -1028,15 +1040,15 @@ def reg_total_t(coords_q,coords_r,params_dist):
 
 def FFD_Bspline_apply_t(coords_q,params_dist,round_t = 0):
     """
-    Applies one round of the FFD transformation to the query sample.
+    Applies one round of the FFD transformations described in `params_dist` to the query sample.
 
     Parameters
     ----------
     coords_q : torch.Tensor
-        The query sample.
+        The query sample coordinates.
     params_dist : reg_params
-        The parameters for the FFD transformation - the mesh_trans_list attribute should describe the FFD to apply.
-    round_t : int (default = 0)
+        The parameters for the FFD transformation - the `mesh_trans_list` attribute should describe the FFD to apply.
+    round_t : int, optional (default: 0)
         The round of the FFD transformation to apply.
     
     Returns
@@ -1082,21 +1094,21 @@ def rescale_coords(coords_raw,graph_list,rescale = False):
 
     Parameters
     ----------
-    coords_raw : dict
-        Dictionary mapping the sample names to the raw coordinates as np.arrays.
+    coords_raw : dict[str, np.array]
+        Dictionary mapping the sample names to the raw coordinates.
     graph_list : list[str]
         The list of sample names.
-    rescale : bool (default = False)
-        If True, rescale the coordinates.
+    rescale : bool, optional (default: False)
+        If True, rescale the coordinates. If False, no rescaling is applied.
 
     Returns
     -------
-    dict
-        Dictionary mapping the sample names to the rescaled coordinates as np.arrays.
+    dict[str, np.arrays]
+        Dictionary mapping the sample names to the rescaled coordinates.
     float
         The rescale factor for the second sample in graph_list (or 1 if rescale = False).
-    
     """
+
     rescale_factor = 1
     if rescale:
         coords_raw = coords_raw.copy()
@@ -1144,18 +1156,18 @@ def plot_mid(coords_q,coords_r,output_path='',filename = None,title_t = ['ref','
     Parameters
     ----------
     coords_q : np.array
-        The coordinates of the query sample.
+        The query sample coordinates.
     coords_r : np.array
-        The coordinates of the reference sample.
-    output_path : str
-        The path to save the plot.
-    filename : str
-        The name of the file to save the plot.
-    title_t : list[str] (default = ['ref','query'])
+        The reference sample coordinates.
+    output_path : str, optional
+        The path to save the plot. The plot will only be saved if `filename` is provided.
+    filename : str, optional
+        The name of the file to save the plot (without .pdf). If omitted, the plot will not be saved.
+    title_t : list[str], optional (default: ['ref','query'])
         The labels for the samples in the plot.
-    s_t : int (default = 8)
+    s_t : int, optional (default: 8)
         The size of the points in the plot.
-    scale_bar_t : list[float]
+    scale_bar_t : list[float], optional
         The length (in data units) and label of the scale bar for the plot. If omitted, no scale bar is added.
     """
 
@@ -1181,18 +1193,18 @@ def corr_heat(coords_q,coords_r,corr,output_path,title_t = ['Corr in ref','Ancho
     Parameters
     ----------
     coords_q : np.array
-        The coordinates of the query sample.
+        The query sample coordinates.
     coords_r : np.array
-        The coordinates of the reference sample.
+        The reference sample coordinates.
     corr : np.array
         The correlation matrix between the query and reference sample.
     output_path : str
-        The path to save the plot.
-    title_t : list[str] (default = ['Corr in ref','Anchor in query'])
+        The path to save the plot. The plot will only be saved if `filename` is provided.
+    title_t : list[str], optional (default: ['Corr in ref','Anchor in query'])
         The labels for the two panes of each plot.
-    filename : str
-        The name of the file to save the plot.
-    scale_bar_t : list[float]
+    filename : str, optional
+        The name of the file to save the plot. If omitted, the plot will not be saved.
+    scale_bar_t : list[float], optional
         The length (in data units) and label of the scale bar for the plot. If omitted, no scale bar is added.
     """
 
@@ -1239,16 +1251,16 @@ def corr_heat(coords_q,coords_r,corr,output_path,title_t = ['Corr in ref','Ancho
 
 def prelocate_loss_plot(J_t,output_path,prefix = 'test'):
     """ 
-    Plots the loss during prelocation - the x-axis is the iteration number and the y-axis is the loss value.
+    Plots and saves the loss during prelocation, where the x-axis is the iteration number and the y-axis is the loss value.
     
     Parameters 
     ----------
     J_t : list[float]
-        The loss values by iteration.
+        The loss values for each iteration.
     output_path : str
         The path to save the plot.
-    prefix : str, optional (default = 'test')
-        The prefix for the file name.
+    prefix : str, optional (default: 'test')
+        The prefix for the file name. The name of the file will be `prefix _prelocate_loss.pdf`.
     """
     
     plt.rcParams.update({'font.size' : 15})
@@ -1258,33 +1270,33 @@ def prelocate_loss_plot(J_t,output_path,prefix = 'test'):
 
 def register_result(coords_q,coords_r,cov_anchor_t,bleeding,embed_stack,output_path,k=8,prefix='test',scale_t = 1,index_list = None):
     """
-    Plots and saves three figures for the registration results.
-    1: The query and reference coordinates on the same axes.
-    2: The query and reference coordinates colored by the cell type.
-    3: The query coordinates colored by the similarity score to the reference sample.
+    Plots and saves three figures for the registration results.\n
+    1: The query and reference coordinates on the same axes.\n
+    2: The query and reference coordinates colored by the cell type.\n
+    3: The query coordinates colored by similarity score (the cost function value) to the reference sample.
 
     Parameters 
     ----------
     coords_q : np.array
-        The query sample.
+        The query sample coordinates.
     coords_r : np.array
-        The reference sample.
+        The reference sample coordinates.
     cov_anchor_t : np.array
         The covariance matrix of the query and reference sample.
     bleeding : int
-        When the reference sample is larger than the query sample, for efficient computation, only the region of the query sample with bleeding distance will be considered when calculating the cost function.
+        When the reference sample is larger than the query sample, for efficient computation, only the region of the reference sample within `bleeding` distance of the query sample will be considered when calculating the cost function.
     embed_stack : 2D array-like
-        The embedding of the query and reference sample.
+        The embedding of the query and reference samples.
     output_path : str
         The path to save the plots.
-    k : int, optional (default = 8)
-        The number of clusters for the K-means clustering.
-    prefix : str, optional (default = 'test')
+    k : int, optional (default: 8)
+        The number of clusters for the K-means clustering in plot 2.
+    prefix : str, optional (default: 'test')
         The prefix for the file names.
-    scale_t : float, optional (default = 1)
+    scale_t : float, optional (default: 1)
         The scale factor for the coordinates.
     index_list : list[np.array], optional
-        The index list for which cells to consider in the query and reference sample. If omitted, all the cells in the query and reference sample will be considered.
+        A mask indicating which cells to plot in the query and reference samples. If omitted, all cells will be used.
     """
 
     # filter and scale the coordinates 
@@ -1358,15 +1370,15 @@ def affine_reg_params(it_theta,similarity_score,iterations,output_path,prefix='t
     Parameters
     ----------
     it_theta : list[array-like]
-        The affine transformation parameters for each iteration.
+        The affine transformation parameters for each iteration. The format of the parameters is that the first two elements are the coefficients for scaling in x and y, the third element is the rotation in degrees, and the last two elements are the coefficients for translation in x and y.
     similarity_score : list[float]
         The similarity score for each iteration.
     iterations : int
-        The number of iterations.
+        The number of iterations (used only in the filename).
     output_path : str
         The path to save the plot.
-    prefix : str (default = 'test')
-        The prefix for the file name
+    prefix : str (default: 'test')
+        The prefix for the file name. The name of the file will be `prefix _params_Affine_GD_ iterations its.pdf`.
     """
 
     plt.rcParams.update({'font.size' : 15,'axes.titlesize' : 15,'pdf.fonttype':42})
@@ -1385,23 +1397,23 @@ def affine_reg_params(it_theta,similarity_score,iterations,output_path,prefix='t
 
 def CAST_STACK_rough(coords_raw_list, ifsquare=True, if_max_xy=True, percentile = None):
     '''
-    Roughly scales the coordinates to a square or to the max value of the `max_range_x` and `max_range_y`, respectively (if ifsquare is False), or the max value of [max_range_x,max_range_y] (if ifsquare is True).
+    Roughly scales the coordinates using the range of the x and y coordinates. If `ifsquare` is True, the coordinates will be scaled by a uniform factor in the x and y directions (the maximum value of the range of x and y). Otherwise, the x and y coordinates will be scaled by their respective maximum values.
 
     Parameters
     ----------
     coords_raw_list : list[np.array]
-        List of numpy arrays, each array is the coordinates of a layer
+        List of numpy arrays, where each array is the coordinates of a layer.
     ifsquare : bool, optional (default: True) 
-        If True, the coordinates will be scaled to a square
+        If True, the coordinates will be scaled by a uniform factor in the x and y directions (the maximum value of the range of x and y). Otherwise, the x and y coordinates will be scaled by their respective maximum values. 
     if_max_xy : bool, option (default: True)
-        If True, the coordinates will be scaled to the max value of the `max_range_x` and `max_range_y`, respectively (if ifsquare is False), or the max value of [max_range_x,max_range_y] (if ifsquare is True)
+        If False, the coorinates will be dividied by the maximum value of the range of x and y.
     percentile: list[float] | float | None, optional (default: None)
-        If not None, the min and max will be calculated based on the percentile of the coordinates for each slice.
+        If not None, the min and max for caluclating the range will be calculated based on the percentile of the coordinates for each slice (ignoring coordinates outside of the percentile values).
 
     Returns
     -------
     list[np.array]
-        List of numpy arrays, each array is the scaled coordinates of a layer
+        List of numpy arrays, where each array is the scaled coordinates of a layer
     '''
     # Convert list of arrays to a single numpy array for easier processing
     all_coords = np.concatenate(coords_raw_list)
@@ -1433,7 +1445,7 @@ def CAST_STACK_rough(coords_raw_list, ifsquare=True, if_max_xy=True, percentile 
 #################### Calculation ####################
 def coords_minus_mean(coord_t):
     """
-    Subtracts the mean of the coordinates from the coordinates.
+    Subtracts the mean from a set of coordinates.
 
     Parameters
     ----------
@@ -1449,7 +1461,7 @@ def coords_minus_mean(coord_t):
 
 def coords_minus_min(coord_t):
     """
-    Subtracts the min of the coordinates from the coordinates.
+    Subtracts the min from a set of coordinates.
 
     Parameters
     ----------
@@ -1465,7 +1477,7 @@ def coords_minus_min(coord_t):
 
 def max_minus_value(corr):
     """
-    Subtracts the correlation matrix from its maximum value (to invert the correlation matrix).
+    Inverts a correlation matrix by substracting it from its maximum value. 
 
     Parameters 
     ----------
@@ -1481,7 +1493,7 @@ def max_minus_value(corr):
 
 def coords_minus_min_t(coord_t):
     """
-    Subtracts the column-wise minimum value from the coordinates.
+    Subtracts the column-wise minimum value from a set of coordinates.
 
     Parameters
     ----------
@@ -1497,7 +1509,7 @@ def coords_minus_min_t(coord_t):
 
 def max_minus_value_t(corr):
     """
-    Subtracts the correlation matrix from its maximum value (to invert the correlation matrix).
+    Inverts a correlation matrix by substracting it from its maximum value. 
 
     Parameters
     ----------
@@ -1521,8 +1533,8 @@ def corr_dist(query_np, ref_np, nan_as = 'min'):
         The query sample.
     ref_np : array-like
         The reference sample.
-    nan_as : str (default = 'min')
-        If 'min', replace the NaN values with the minimum value in the distance matrix.
+    nan_as : str (default: 'min')
+        If 'min', replace NaN values with the minimum value in the distance matrix.
         
     Returns
     -------
@@ -1542,7 +1554,7 @@ def corr_dist(query_np, ref_np, nan_as = 'min'):
 
 def region_detect(embed_dict_t,coords0,k = 20):
     """
-    Detects and plots the regions in the query sample based on the embedding.
+    Detects and plots the KMeans clustering results of the embeddings in the query sample.
     
     Parameters
     ----------
@@ -1550,13 +1562,13 @@ def region_detect(embed_dict_t,coords0,k = 20):
         The embedding of the query sample.
     coords0 : array-like
         The coordinates of the query sample.
-    k : int (default = 20)
+    k : int (default: 20)
         The number of regions to detect.
     
     Returns
     -------
     np.array
-        The region labels for the query sample.
+        The KMeans clustering labels for the query sample.
     """
 
     plot_row = int(np.floor((k+1)/4) + 1) # plot 4 regions in each row

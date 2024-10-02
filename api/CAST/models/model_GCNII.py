@@ -46,9 +46,10 @@ class Args:
         This hyperparameter controls the extent of feature dropout for graph augmentation in the CCA-SSG self-supervised learning model. dfr = 1 means complete dropout while dfr = 0 means no dropout. For CAST, we used a default dfr = 0.3, following the CCA-SSG paper. Our parameter sensitivity experiments showed that alignment performance is optimal from 0.1 to 0.4. We recommend users to use the default dfr value unless necessary.
     """
 
-    #: Set to cuda:{GPU_ID} if GPU is available and gpu is not -1, otherwise set to cpu
     device : str = field(init=False) 
-
+    """
+        Set to the GPU_ID if GPU is available and gpu is not -1, otherwise set to cpu.
+    """
 
     encoder_dim : int = 256 
     """
@@ -70,13 +71,13 @@ class Args:
 # fix the div zero standard deviation bug, Shuchen Luo (20220217)
 def standardize(x, eps = 1e-12):
     """
-    Standardizes values in x (subtracts the mean and divides by std).
+    Standardizes values in x (subtracts the mean and divides by standard deviation).
 
     Parameters
     ----------
     x : torch.Tensor
         The input features.
-    eps : float
+    eps : float, optional (default: 1e-12)
         An epsilon value to prevent division by zero.
     
     Returns
@@ -198,14 +199,14 @@ class GCNII(nn.Module):
 class GCN(nn.Module):
     """
     A class representing a GCN model.
-    The model consists of an optional encoder, followed by n_layers GraphConv layers
+    The model consists of an optional encoder, followed by `n_layers` GraphConv layers
 
     Attributes
     ----------
     in_dim : int
         The number of input features.
     encoder_dim : int
-        The number of output features of the encoder (ignored if use_encoder is false).
+        The number of output features of the encoder (ignored if `use_encoder` is false).
     n_layers : int
         The number of GraphConv layers.
     use_encoder : bool (default: False)
@@ -265,15 +266,15 @@ class CCA_SSG(nn.Module):
     in_dim : int
         The number of input features.
     encoder_dim : int
-        The number of output features of the encoder (ignored if use_encoder is false).
+        The number of output features of the encoder (ignored if `use_encoder` is false).
     n_layers : int
         The number of layers in the model excluding the optional encoder. 
     backbone : GCNII | GCN
         The backbone of the model, either GCNII or GCN -- in initialization, provide 'GCNII' | 'GCN' as a string.
     alpha : List[float] (default: 0.1 for each layer)
-        The alpha values for each layer in GCNII (ignored if backbone is GCN).
+        The alpha values for each layer of GCNII (ignored if `backbone` is GCN).
     lambda_ : List[float] (default: 1 for each layer)
-        The lambda values for each layer in GCNII (ignored if backbone is GCN).
+        The lambda values for each layer of GCNII (ignored if `backbone` is GCN).
     use_encoder : bool (default: False)
         Whether or not to use an encoder.
     """
@@ -287,7 +288,7 @@ class CCA_SSG(nn.Module):
 
     def get_embedding(self, graph, feat):
         """
-        Returns the result of a forward pass on feat.
+        Returns the result of a forward pass on `feat`.
 
         Parameters
         ----------

@@ -80,7 +80,7 @@ def random_aug(graph, x, feat_drop_rate, edge_mask_rate):
 
 def drop_feature(x, drop_prob):
     """
-    Randomly drop features with probability drop_prob
+    Randomly drop features with probability `drop_prob`.
 
     Parameters
     ----------
@@ -107,7 +107,7 @@ def drop_feature(x, drop_prob):
 
 def mask_edge(graph, mask_prob):
     """
-    Randomly mask edges with probability mask_prob.
+    Randomly mask edges with probability `mask_prob`.
 
     Parameters
     ----------

@@ -25,7 +25,7 @@ def space_project(sdata_inte, idx_source, idx_target, raw_layer,
     working_memory_t = 1000
     ):
     """
-    Projects the source cells to the target cells based on the k-nearest neighbors in the pca space and phsyical distance.
+    Projects the source cells to the target cells based on the k-nearest neighbors in the PCA space and phsyical distance.
 
     Parameters
     ----------
@@ -47,31 +47,31 @@ def space_project(sdata_inte, idx_source, idx_target, raw_layer,
         The coordinates of the target cells.
     output_path : str
         The path to save the output files.
-    source_sample_ctype_col : str
+    source_sample_ctype_col : str | None
         The column name of the cell type annotation in the source sample. If None, the projection will be performed as a single sample without cell type annotation.
     target_cell_pc_feature : array-like, optional
         The principal components of the target cells.
     source_cell_pc_feature : array-like, optional
         The principal components of the source cells. 
-    k2 : int, optional (default 1)
+    k2 : int, optional (default: 1)
         The number of nearest neighbors to consider.
-    ifplot : bool, optional (default True)
-        Whether to generate the evaluation plots.
-    umap_feature : str, optional (default 'X_umap')
-        The column name in sdata_inte.obsm to use for the UMAP for visualization and saving.
-    ave_dist_fold : int, optional (default 2)
-        A multiplicative factor on the average distance for the physical distance threshold.
-    batch_t : str, optional (default '')
-        The batch name for the output files.
-    alignment_shift_adjustment : int, optional (default 50)
+    ifplot : bool, optional (default: True)
+        Whether to generate evaluation plots.
+    umap_feature : str, optional (default: 'X_umap')
+        The column name in `sdata_inte.obsm` to use for the UMAP for visualization and saving.
+    ave_dist_fold : int, optional (default: 2)
+        A multiplicative factor on the average distance to use for the physical distance threshold.
+    batch_t : str, optional (default: '')
+        The batch name used in naming the output files.
+    alignment_shift_adjustment : int, optional (default: 50)
         An additive factor on the average distance for the physical distance threshold. 
     color_dict : dict, optional
-        The color dictionary for the cell type annotation for visualization.
-    adjust_shift : bool, optional (default False)
-        Whether to shift the coordinates of the source cells by the median shift between the target and source cells for each cell type (ignored if source_sample_ctype_col is not given). 
-    metric_t : str, optional (default 'cosine')
-        The metric to use for the pairwise distance calculations.
-    working_memory_t : int, optional (default 1000)
+        The color dictionary for visualizing the cell type annotations.
+    adjust_shift : bool, optional (default: False)
+        Whether to shift the coordinates of the source cells by the median shift between the target and source cells for each cell type (ignored if `source_sample_ctype_col` is not given). 
+    metric_t : str | callable, optional (default: 'cosine')
+        The metric to use for the pairwise distance calculations. See sklearn.metrics.pairwise_distances_chunked for more information. 
+    working_memory_t : int, optional (default: 1000)
         The sought maximum memory for the chunked pairwise distance calculations.
     
     Returns
@@ -180,17 +180,19 @@ def average_dist(coords,quantile_t = 0.99,working_memory_t = 1000,strategy_t = '
     ----------
     coords : array-like 
         The coordinates of the cells.
-    quantile_t : float, optional (default 0.99)
+    quantile_t : float, optional (default: 0.99)
         The quantile to filter the delaunay graph edges. This is not applied if the number of cells is less than 5.
-    working_memory_t : int, optional (default 1000)
+    working_memory_t : int, optional (default: 1000)
         The sought maximum memory for the chunked pairwise distance calculations.
-    strategy_t : str, optional (default 'convex')
-        The strategy to calculate the delaunay graph.
+    strategy_t : 'convex' | 'delaunay', optional (default: 'convex')
+        The strategy to use for generating the delaunay graph.\n
+        Convex will use Veronoi polygons clipped to the convex hull of the points and their rook spatial weights matrix (with libpysal).\n
+        Delaunay will use the Delaunay triangulation (with sciipy).
     
     Returns
     -------
     float, float, np.ndarray, np.ndarray
-        The average distance, the quantile_t of the edge distances, the edge distances, and the delaunay graph.
+        The average distance, the quantile_t of the edge distances, the edge distances, and the delaunay graph. On a dataset of less than 5 cells, the average distance is calculated directly and the other return values are the empty string.
     """
 
     coords_t = pd.DataFrame(coords)
@@ -248,12 +250,12 @@ def group_shift(feat_target, feat_source, coords_target_t, coords_source_t, work
         The coordinates of the target cells.
     coords_source_t : np.ndarray
         The coordinates of the source cells.
-    working_memory_t : int, optional (default 1000)
+    working_memory_t : int, optional (default: 1000)
         The sought maximum memory for the chunked pairwise distance calculations.
-    pencentile_t : float, optional (default 0.8)
+    pencentile_t : float, optional (default: 0.8)
         The pencentile of the pairwise distances to use as anchor points.
-    metric_t : str, optional (default 'cosine')
-        The metric to use for the pairwise distance calculations.
+    metric_t : str, optional (default: 'cosine')
+        The metric to use for the pairwise distance calculations. See sklearn.metrics.pairwise_distances_chunked for more information. 
     
     Returns
     -------
@@ -289,29 +291,29 @@ def physical_dist_priority_project(feat_target, feat_source, coords_target, coor
     feat_target : array-like
         The target features, used to calculate the pairwise distance between target and source cells.
     feat_source : array-like
-        The source features, used to calculate the pairwise distance between target and source cells..
+        The source features, used to calculate the pairwise distance between target and source cells.
     coords_target : array-like
         The coordinates of the target cells.
     coords_source : array-like
         The coordinates of the source cells.
     source_feat : scipy.sparse matrix, optional
-        If provided, also take the weighted average of these source features.
-    k2 : int, optional (default 1)
-        For points without k2 neighbors within the physical distance threshold, extend the search to k_extend neighbors.
-    k_extend : int, optional (default 20)
-        For points without k2 neighbors within the physical distance threshold, extend the search to k_extend neighbors.
-    pdist_thres : int, optional (default 200)
+        If provided, also returns the weighted average of these source features.
+    k2 : int, optional (default: 1)
+        For points without `k2` neighbors within the physical distance threshold, extend the search to `k_extend` neighbors.
+    k_extend : int, optional (default: 20)
+        For points without `k2` neighbors within the physical distance threshold, extend the search to `k_extend` neighbors.
+    pdist_thres : int, optional (default: 200)
         The physical distance threshold for the nearest neighbors search.
-    working_memory_t : int, optional (default 1000)
+    working_memory_t : int, optional (default: 1000)
         The sought maximum memory for the chunked pairwise distance calculations.
-    metric_t : str, optional (default 'cosine')
-        The metric to use for the pairwise distance calculations.
+    metric_t : str, optional (default: 'cosine')
+        The metric to use for the pairwise distance calculations. See sklearn.metrics.pairwise_distances_chunked for more information. 
 
     Returns
     -------
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray (, np.ndarray)
         The indicies of the k-nearest neighbors, their corresponding weights, cosine distances and physical distances for each cell.
-        If source features are provided, also return the weighted average of the source features.
+        If `source_feat` is provided, also return the weighted average of the source features.
     """
 
     def reduce_func_cdist_priority(chunk_cdist, start):
@@ -414,15 +416,15 @@ def sparse_mask(idw_t, ind : np.ndarray, n_cols : int, dtype=np.float64): # ind 
     idw_t : np.ndarray
         The non-zero values to set in the matrix.
     ind : np.ndarray
-        The indices of the non-zero values with shape (num data points, indices), in the form of output of numpy.argpartition function
+        The indices of the non-zero values with shape (num data points, indices), in the format of the output of the `numpy.argpartition` function
     n_cols : int
         The number of columns in the output matrix.
-    dtype : type, optional (default np.float64)
+    dtype : type, optional (default: np.float64)
         The data type of the output matrix.
 
     Returns
     -------
-    csr_matrix
+    scipy.sparse.csr_matrix
         The CSR matrix with the given non-zero values and indices.
     """
 
@@ -434,25 +436,29 @@ def sparse_mask(idw_t, ind : np.ndarray, n_cols : int, dtype=np.float64): # ind 
 
 def cosine_IDW(cosine_dist_t,k2=5,eps = 1e-6,need_filter = True,ifavg = False):
     """
-    Compute the weights for the k-nearest neighbors using the inverse distance weighting method or the average weight.
+    Compute the weights for the k-nearest neighbors of a target cell using the inverse distance weighting method or the average weight.
 
     Parameters
     ----------
     cosine_dist_t : np.ndarray
         The cosine distance between the target cell and its neighbors.
-    k2 : int, optional (default 5)
+    k2 : int, optional (default: 5)
         The number of nearest neighbors to consider.
-    eps : float, optional (default 1e-6)
+    eps : float, optional (default: 1e-6)
         A small constant to prevent dividing by zero.
-    need_filter : bool, optional (default True)
-        Whether to filter the k-nearest neighbors. If True, only consider the k2 nearest neighbors.
-    ifavg : bool, optional (default False)
+    need_filter : bool, optional (default: True)
+        Whether to filter for only the k-nearest neighbors. If True, only consider the `k2` nearest neighbors.
+    ifavg : bool, optional (default: False)
         Whether to use the average weight for all the neighbors. If False, use the IDW method.
 
     Returns
     -------
-    np.ndarray, np.ndarray, np.ndarray
-        The indicies of the k-nearest neighbors, their corresponding weights, and cosine distances for each cell
+    np.ndarray
+        The indicies of the `k2`-nearest neighbors (in `cosine_dist_t`) if `need_filter` is True, otherwise 0.
+    np.ndarray
+        The cell weights as a 1D array. If `ifavg` is True, a uniform `1/k2` weight for `k2` neighbors. Otherwise the IDW weights for the `k2` neighbors if `need_filter` is True or for all cells if `need_filter` is False.
+    np.ndarray
+        The cosine distances for the `k2`-nearest neighbors if `need_filter` is True, otherwise `cosine_dist_t`. 
     """
 
     if need_filter:
@@ -469,18 +475,18 @@ def cosine_IDW(cosine_dist_t,k2=5,eps = 1e-6,need_filter = True,ifavg = False):
 
 def IDW(df_value,eps = 1e-6):
     """
-    Calculates the normalized, reciprocal weights for each element in the dataset.
+    Calculates the normalized, reciprocal weights for an array.
 
     Parameters
     ----------
-    df_value : pd.DataFrame
-        The dataset to take the weights from.
+    df_value : np.ndarray
+        The array to take the weights from.
     eps : float, optional (default: 1e-6)
         A small constant to prevent dividing by zero.
     
     Returns
     -------
-    pd.DataFrame
+    np.ndarray
         The normalized, reciprocal weights for each element.
     """
 
@@ -493,7 +499,7 @@ def evaluation_project(physical_dist, project_ind, coords_target, coords_source,
     umap_target = None, umap_source = None, source_sample = None, target_sample = None,
     cdists = None, batch_t = '', exclude_group = 'Other', color_dict = None, umap_examples = False):
     """
-    Generates and saves evaluation plots for the projection results - physical distance and cosine distance histograms, confusion matrix, link plot, and UMAP examples.
+    Generates and saves evaluation plots for the projection results, such as the physical distance and cosine distance histograms, the confusion matrix, a 3D link plot, and UMAP examples plot (see `cdist_check`).
 
     Parameters
     ----------
@@ -520,18 +526,18 @@ def evaluation_project(physical_dist, project_ind, coords_target, coords_source,
     umap_source : array-like, optional
         The UMAP coordinates of the source cells.
     source_sample : str, optional
-        The name of the source sample, used as a label on the UMAP examples plot (if umap_examples is True).
+        The name of the source sample, used as a label on the UMAP examples plot (if `umap_examples` is True).
     target_sample : str, optional
-        The name of the target sample, used as a label on the UMAP examples plot (if umap_examples is True).
+        The name of the target sample, used as a label on the UMAP examples plot (if `umap_examples` is True).
     cdists : array-like, optional
         The cosine distances between the target cells and their k-nearest neighbors.
-    batch_t : str, optional (default '')
+    batch_t : str, optional (default: '')
         The batch name for naming the output files.
-    exclude_group : str | None, optional (default 'Other')
-        The group to exclude from the confusion matrix. If None, excluse no groups. 
+    exclude_group : str | None, optional (default: 'Other')
+        The group to exclude from the confusion matrix. If None, exclude no groups. 
     color_dict : dict, optional
-        The color dictionary for the cell type annotation for visualization (only applied if source_sample_ctype_col is given).
-    umap_examples : bool, optional (default False)
+        The color dictionary for visualizing the cell type annotations. (only applied if `source_sample_ctype_col` is given).
+    umap_examples : bool, optional (default: False)
         Whether to generate the UMAP examples plot.
     """
 
@@ -593,9 +599,9 @@ def cdist_hist(data_t,range_t = None,step = None):
     data_t : array-like
         The data to plot.
     range_t : tuple, optional
-        The range of the x-axis (inclusive on both sides).
+        The range of the x-axis (inclusive on both sides). If omitted, the entire data range is included.
     step : float, optional
-        The step size of the x-axis.
+        The step size of the x-axis. If omitted, the step size is automatically determined by matplotlib.hist.
     """
 
     plt.figure(figsize=[5,5])
@@ -625,12 +631,12 @@ def confusion_mat_plot(y_true_t, y_pred_t, filter_thres = None, withlabel = True
     y_pred_t : np.ndarray
         The predicted cell type labels from the projection results.
     filter_thres : int, optional
-        A threshold to filter the cell types by their counts.
-    withlabel : bool, optional (default True)
+        A threshold to filter out cell types with low cell counts.
+    withlabel : bool, optional (default: True)
         Whether to include value labels on the diagonal of the confusion matrix.
-    fig_x : int, optional (default 60)
+    fig_x : int, optional (default: 60)
         The width of the figure.
-    fig_y : int, optional (default 20)
+    fig_y : int, optional (default: 20)
         The height of the figure.
     """
 
@@ -684,26 +690,26 @@ def confusion_mat_plot(y_true_t, y_pred_t, filter_thres = None, withlabel = True
 
 def cdist_check(cdist_t,cdist_idx,umap_coords0,umap_coords1, labels_t = ['query','ref'],random_seed_t = 2,figsize_t = [40,32],output_path_t = None):
     """
-    Generates UMAP examples plots for a random 20 points, highlighting the target points and their nearest neighbor in the reference sample.
+    Generates UMAP examples plots — for a random 20 points (generating 20 subplots), highlights the target point and its nearest neighbor in the reference sample.
 
     Parameters
     ----------
     cdist_t : array-like
-        The cosine distances between the target cells and their k-nearest neighbors (used to title the graph).
+        The cosine distances between the target cells and their k-nearest neighbors (used to title the subplots with their distance values).
     cdist_idx : array-like
         The indicies of the k-nearest neighbors for each cell in the target space.
     umap_coords0 : array-like
         The UMAP coordinates of the query cells.
     umap_coords1 : array-like
         The UMAP coordinates of the reference cells.
-    labels_t : list, optional (default ['query','ref'])
+    labels_t : list[str], optional (default: ['query','ref'])
         The labels for the query and reference samples.
-    random_seed_t : int, optional (default 2)
-        The random seed for sampling the 20 points.
-    figsize_t : list, optional (default [40,32])
+    random_seed_t : int, optional (default: 2)
+        The random seed used to sample the 20 random points.
+    figsize_t : list[float], optional (default: [40,32])
         The size of the figure.
     output_path_t : str, optional
-        The path to save the output files.
+        The path to save the final plot. If omitted, the plot will not be saved.
     """
 
     plt.rcParams.update({'xtick.labelsize' : 20,'ytick.labelsize':20, 'axes.labelsize' : 30, 'axes.titlesize' : 40,'axes.grid': False})
@@ -738,7 +744,7 @@ def cdist_check(cdist_t,cdist_idx,umap_coords0,umap_coords1, labels_t = ['query'
 
 def link_plot_3d(assign_mat, coords_target, coords_source, k, figsize_t = [15,20], sample_n=1000, link_color_mask=None, color_target="#9295CA", color_source='#E66665', color_true = "#999999", color_false = "#999999", remove_background = True):
     """
-    Generates a 3D link plot for the projection results.
+    Generates a 3D link plot for the projection results - the target cells are displayed in a plane above the source cells and `sample_n` links between corresponding target and source cells are drawn.
 
     Parameters
     ----------
@@ -750,22 +756,22 @@ def link_plot_3d(assign_mat, coords_target, coords_source, k, figsize_t = [15,20
         The coordinates of the source cells.
     k : int
         The number of nearest neighbors to consider. As of the current implementation, this must be 1. 
-    figsize_t : list, optional (default [15,20])
+    figsize_t : list, optional (default: [15,20])
         The size of the figure.
-    sample_n : int, optional (default 1000)
+    sample_n : int, optional (default: 1000)
         The number of links to sample and display.
     link_color_mask : np.ndarray, optional
-        A mask to color the links based on their true/false values. If omitted, all links will be colored with color_true.
-    color_target : str, optional (default "#9295CA")
+        A boolean mask to color the links based on their corresponding values. If omitted, all links will be colored with `color_true`.
+    color_target : str, optional (default: "#9295CA")
         The color of the target cells (displayed in a plane above the source cells).
-    color_source : str, optional (default '#E66665')
+    color_source : str, optional (default: '#E66665')
         The color of the source cells (displayed in a plane below the target cells).
-    color_true : str, optional (default "#999999") 
-        The color of the links that are true in the link_color_mask. If link_color_mask is omitted, this color will be used for all links.
-    color_false : str, optional (default "#999999")
-        The color of the links that are false in the link_color_mask. If link_color_mask is omitted, this color will not be used.
-    remove_background : bool, optional (default True)
-        Whether to remove the background of the plot.
+    color_true : str, optional (default: "#999999") 
+        The color of the links that are True in the `link_color_mask`. If `link_color_mask` is omitted, this color will be used for all links.
+    color_false : str, optional (default: "#999999")
+        The color of the links that are False in the `link_color_mask`. If `link_color_mask` is omitted, this color will not be used.
+    remove_background : bool, optional (default: True)
+        Whether to remove the axes of the plot.
     """
 
     from mpl_toolkits.mplot3d.art3d import Line3DCollection
