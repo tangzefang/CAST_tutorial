@@ -1529,9 +1529,9 @@ def corr_dist(query_np, ref_np, nan_as = 'min'):
     
     Parameters
     ----------
-    query_np : array-like
+    query_np : np.ndarray
         The query sample.
-    ref_np : array-like
+    ref_np : np.ndarray
         The reference sample.
     nan_as : str (default: 'min')
         If 'min', replace NaN values with the minimum value in the distance matrix.
