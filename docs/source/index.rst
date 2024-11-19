@@ -7,7 +7,7 @@ Welcome to CAST's documentation!
 ================================
 
 **CAST** is a Python library for physically aligning different spatial transcriptome regardless of technologies, magnification, individual variation, and experimental batch effects.
-CAST is composed of three modules: CAST Mark, CAST Stack, and CAST Projection.
+CAST is composed of three modules: CAST Mark, CAST Stack, and CAST Projection. The datasets / jupyter notebooks used in the demos could be found here: https://drive.google.com/drive/u/1/folders/118IsDqKT5N8LbmgNz42t69rwlb8FZTGR.
 
 `CAST Github <https://github.com/wanglab-broad/CAST>`_
 

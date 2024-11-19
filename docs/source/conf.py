@@ -31,11 +31,14 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    "sphinxcontrib.jquery",
 ]
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 autodoc_member_order = 'bysource'
 autodoc_inherit_docstrings = False
+includehidden = True
+collapse_navigation = False
 
 templates_path = ['_templates']
 exclude_patterns = []
